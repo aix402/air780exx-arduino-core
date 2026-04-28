@@ -9,11 +9,13 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | Surface | Current status | Notes |
 | --- | --- | --- |
 | `Arduino.h` P0 helpers | Compile-enabled | math, bit/byte, character, `pgmspace.h`, `random()`, `map()` |
-| `Print` / `Stream` / minimal `String` | Compile-enabled | enough for current in-repo examples and current library probes |
+| `Print` / `Stream` / expanded `String` | Compile-enabled | common Arduino/ESP32 `String` methods now cover current in-repo examples and library probes |
 | `HardwareSerial` objects | Compile-enabled | `Serial1`, `Serial2`, `Serial3` exist; `Serial` is USB/log, not UART0 |
 | `Wire` / `Wire1` | Compile-enabled | common method shapes present |
 | `SPI` / `SPI1` | Compile-enabled | common transaction and transfer shapes present |
 | `analogWrite()` family | Compile-enabled | LuatOS PWM-backed, not ESP32 LEDC-backed |
+| `Client` / `UDP` / WiFi compatibility aliases | Compile-enabled and partially hardware-observed | cellular-backed `WiFiClient`, `WiFiClientSecure`, and `WiFiUDP` aliases exist for common libraries; they are not real Wi-Fi |
+| `EEPROM`, `Preferences`, `FS`, `LittleFS` | Hardware-observed | AIR780EPM storage smoke has passed; this is not ESP32 partition parity |
 
 ## Accepted but Not Yet ESP32-Equivalent
 
@@ -31,12 +33,10 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 
 | Area | Notes |
 | --- | --- |
-| Filesystem | `FS`, `LittleFS`, `SPIFFS`, `SD` not implemented |
-| NVM | `EEPROM` and `Preferences` not implemented |
 | Sleep | no Arduino sleep/wakeup API yet |
 | OTA | no `Update` or URL OTA contract yet |
-| Network | no `Client`, `UDP`, `WiFiClient`, `WiFiUDP`, or modem-backed Arduino network layer yet |
 | Interrupt helpers | `attachInterrupt()` family not implemented yet |
+| SD / SPIFFS aliases | not implemented and not yet promised |
 | Touch / DAC / LEDC extras | not implemented and not yet promised |
 
 ## Explicit Non-Goals for Now
@@ -63,6 +63,6 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | --- | --- |
 | UART0 console | `Serial` for logs, `Serial1`+ for board UART tests |
 | ESP32 `ledc*` | `analogWrite()` and AIR780EPM PWM aliases |
-| Wi-Fi network objects | wait for modem-backed Arduino network layer |
+| Wi-Fi network objects | cellular-backed compatibility aliases when a library only needs `Client` / `UDP` contracts |
 | Custom `Wire`/`SPI` remap | current default CSDK routes only |
 | ADC by GPIO number | use logical `A0..A3`; GPIO-number analog mapping is not promised yet |

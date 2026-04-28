@@ -20,7 +20,7 @@ mean the related hardware behavior has been observed on a board.
 | `pgmspace.h` | Compile-enabled | Compatibility-only AVR program-space macros and `pgm_read_*` helpers. |
 | `Print` | Compile-enabled | `print()`, `println()`, `printf()`, bases, floats, `Printable`. |
 | `Stream` | Compile-enabled | Timeout reads, `find()`, `parseInt()`, `parseFloat()`, `readString()`. |
-| `String` | Compile-enabled | Minimal heap-backed implementation for common `Print` and `Stream` use. |
+| `String` | Compile-enabled | Expanded to the common Arduino/ESP32 shape used by third-party libraries: numeric constructors and concat, substring/search, trim/case/replace, conversion helpers, byte copy helpers, comparisons, and `StringSumHelper`. |
 | `F()` / `PSTR()` / `PROGMEM` | Compile-enabled | Currently compatibility macros only; AIR780EPM does not use AVR program space semantics. |
 
 ## Bus APIs
@@ -122,6 +122,8 @@ mean the related hardware behavior has been observed on a board.
 | Direct library dependency closure | Compile-verified | Walks library source `#include` lines to stage dependent sketchbook libraries. |
 | Header-only libraries | Compile-verified | ArduinoJson `JsonGeneratorExample` compiles. |
 | Source libraries | Hardware-observed | SparkFun SCD4x `Example1_BasicReadings` compiles and reports CO2 data on AIR780EPM over `Wire`/I2C0. |
+| Compatibility matrix script | Compile-verified | `scripts\validate_library_compat.ps1` runs selected third-party probes and reports missing local libraries as `SKIP`. |
+| ArduinoJson runtime smoke | Hardware-observed | `validation_sketches\ArduinoJsonRuntimeSmoke` compiles with local ArduinoJson `7.4.3`; board logs on `COM3` at `921600` show repeated `+ARDUINO: ARDUINOJSON_RUNTIME,PASS,LEN,62,...`. |
 
 ## Current Compile Checks
 
@@ -159,6 +161,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\NetworkTimeReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\09.NVM\EepromPreferencesReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\10.FileSystem\LittleFSReport
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\ArduinoJsonRuntimeSmoke -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduinojson_runtime_smoke,ntpclient_report,pubsubclient_mqtts_ca_smoke,mqttclient_256dpi_smoke" -Clean -ContinueOnError
 
 & "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\SparkFun_SCD4x_Arduino_Library\examples\Example1_BasicReadings" --build-path ".\.arduino-ide-work\SCD4xBasic" --clean
 & "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\ArduinoJson\examples\JsonGeneratorExample" --build-path ".\.arduino-ide-work\ArduinoJsonGenerator" --clean
@@ -171,8 +175,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
   verified for normal source libraries and header-only libraries, but do not yet
   implement full Arduino builder behavior such as architecture filtering,
   precompiled library archives, or platform-specific library recipes.
-- `String` is intentionally minimal and will need expansion as real library
-  compatibility tests reveal missing methods.
+- `String` now covers the common Arduino/ESP32 methods needed by current
+  probes, but ESP32-specific move/copy internals are not a public compatibility
+  promise yet.
 - AVR flash-string behavior is source-compatible only; strings are ordinary
   memory on this platform.
 - `random()` is pseudo-random only until a hardware RNG-backed policy is

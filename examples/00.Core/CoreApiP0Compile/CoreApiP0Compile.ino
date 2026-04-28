@@ -25,6 +25,20 @@ void setup() {
   long mapped = map(5, 0, 10, 0, 100);
   double angle = radians(180.0);
 
+  String text(" air780epm-core ");
+  text.trim();
+  text.toUpperCase();
+  text.replace("CORE", "ARDUINO");
+  String tail = text.substring(text.indexOf('-') + 1);
+  String joined = String(F("API:")) + tail + ':' + 42 + ':' + 3.5;
+  joined.remove(0, 4);
+  joined += static_cast<unsigned long long>(123ULL);
+
+  char textBuffer[24];
+  text.toCharArray(textBuffer, sizeof(textBuffer));
+  unsigned char bytes[8];
+  joined.getBytes(bytes, sizeof(bytes), 0);
+
   boolean ok = true;
   ok = ok && (combined == 0x1234);
   ok = ok && (bitRead(flags, 5) == 1);
@@ -40,6 +54,20 @@ void setup() {
   ok = ok && (mapped == 50);
   ok = ok && (randomValue >= 10 && randomValue < 20);
   ok = ok && (angle > 3.13 && angle < 3.15);
+  ok = ok && text.startsWith("AIR780EPM");
+  ok = ok && text.endsWith(String("ARDUINO"));
+  ok = ok && text.equalsIgnoreCase("air780epm-arduino");
+  ok = ok && (text.compareTo("AIR780EPM-ARDUINO") == 0);
+  ok = ok && (text.indexOf('-') == 8);
+  ok = ok && (text.lastIndexOf('I') == 15);
+  ok = ok && (tail == "ARDUINO");
+  ok = ok && (String("123").toInt() == 123);
+  ok = ok && (String("12.5").toFloat() > 12.4F);
+  ok = ok && (String("12.5").toDouble() < 12.6);
+  ok = ok && (strcmp(textBuffer, "AIR780EPM-ARDUINO") == 0);
+  ok = ok && (strcmp(reinterpret_cast<const char *>(bytes), "ARDUINO") == 0);
+  ok = ok && (joined.indexOf("42") > 0);
+  ok = ok && (joined.endsWith("123"));
 
   Serial.print(F("+ARDUINO: CORE_API_P0,"));
   Serial.print(ok ? F("PASS") : F("FAIL"));

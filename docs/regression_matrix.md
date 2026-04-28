@@ -41,6 +41,7 @@ current xmake-native Arduino bridge.
 | MQTT 256dpi smoke | `validation_sketches\Mqtt256dpiSmoke` | `L4` | Third-party `MQTT` by 256dpi over plain `CellularClient` is hardware-observed through connect / subscribe / publish / RX loopback on `broker.emqx.io:1883` |
 | UDP NTP report | `examples\08.Network\UdpNtpReport` | `L4` | Hardware runtime now receives a 48-byte NTP packet and valid epoch |
 | NTPClient report | `validation_sketches\NTPClientReport` | `L4` | Third-party `NTPClient` over the `WiFiUDP` compatibility alias is hardware-observed through update, valid epoch, and `PASS` |
+| ArduinoJson runtime smoke | `validation_sketches\ArduinoJsonRuntimeSmoke` | `L4` | Third-party `ArduinoJson` parse / mutate / serialize smoke; hardware logs show `ARDUINOJSON_RUNTIME,PASS` |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |
@@ -48,6 +49,9 @@ current xmake-native Arduino bridge.
 ## Current Automation Contract
 
 The minimal runner script is `scripts\run_regression_matrix.ps1`.
+Third-party library probes are driven separately by
+`scripts\validate_library_compat.ps1` so missing local sketchbook libraries can
+be reported as `SKIP`.
 
 Initial automation scope:
 
