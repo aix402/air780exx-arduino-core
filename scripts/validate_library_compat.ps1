@@ -177,6 +177,14 @@ function Get-LibraryCompatCatalog {
             -RequiredLibraries @("ArduinoHttpClient") `
             -Note "Exercises a common HTTP Client wrapper on top of CellularClient."
         New-LibraryCompatCase `
+            -Id "arduino_httpclient_runtime_smoke" `
+            -Library "ArduinoHttpClient" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\ArduinoHttpClientRuntimeSmoke") `
+            -Tier "compile-plus-runtime-pending" `
+            -Hardware "cellular network" `
+            -RequiredLibraries @("ArduinoHttpClient") `
+            -Note "Runtime smoke target for ArduinoHttpClient GET over CellularClient."
+        New-LibraryCompatCase `
             -Id "arduino_mqttclient_compile" `
             -Library "ArduinoMqttClient" `
             -SketchPath (Join-Path $repoRoot "validation_sketches\ArduinoMqttClientCompile") `
@@ -184,6 +192,14 @@ function Get-LibraryCompatCatalog {
             -Hardware "none" `
             -RequiredLibraries @("ArduinoMqttClient") `
             -Note "Exercises the official Arduino MQTT client wrapper on top of CellularClient."
+        New-LibraryCompatCase `
+            -Id "arduino_mqttclient_runtime_smoke" `
+            -Library "ArduinoMqttClient" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\ArduinoMqttClientSmoke") `
+            -Tier "compile-plus-runtime-pending" `
+            -Hardware "cellular network" `
+            -RequiredLibraries @("ArduinoMqttClient") `
+            -Note "Runtime smoke target for ArduinoMqttClient publish/subscribe loopback over CellularClient."
         New-LibraryCompatCase `
             -Id "sparkfun_scd4x_basic" `
             -Library "SparkFun SCD4x Arduino Library" `

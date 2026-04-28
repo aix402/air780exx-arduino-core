@@ -50,6 +50,8 @@ current xmake-native Arduino bridge.
 | RTClib compile | `validation_sketches\RTClibCompile` | `L2` | Compile-only gate for `DateTime`, `TimeSpan`, and RTC wrapper classes |
 | ArduinoHttpClient compile | `validation_sketches\ArduinoHttpClientCompile` | `L2` | Compile-only gate for an HTTP wrapper over `CellularClient` |
 | ArduinoMqttClient compile | `validation_sketches\ArduinoMqttClientCompile` | `L2` | Compile-only gate for the official Arduino MQTT client wrapper over `CellularClient` |
+| ArduinoHttpClient runtime smoke | `validation_sketches\ArduinoHttpClientRuntimeSmoke` | `L2` -> `L4` | Compile-ready GET smoke for `ArduinoHttpClient` over `CellularClient`; hardware runtime pending |
+| ArduinoMqttClient runtime smoke | `validation_sketches\ArduinoMqttClientSmoke` | `L2` -> `L4` | Compile-ready plain MQTT loopback smoke for `ArduinoMqttClient` over `CellularClient`; hardware runtime pending |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |
@@ -120,6 +122,8 @@ Initial automation scope:
 - `validation_sketches\RTClibCompile`
 - `validation_sketches\ArduinoHttpClientCompile`
 - `validation_sketches\ArduinoMqttClientCompile`
+- `validation_sketches\ArduinoHttpClientRuntimeSmoke`
+- `validation_sketches\ArduinoMqttClientSmoke`
 
 ## Hardware Rerun Rules
 
@@ -133,6 +137,9 @@ Initial automation scope:
   `examples\07.Servo\ServoPulseReport`.
 - Any change to modem, TCP, TLS, MQTT, or UDP runner code must rerun
   `connectivity`.
+- Any change to the third-party `Client` compatibility surface should rerun
+  `ArduinoHttpClientRuntimeSmoke` and `ArduinoMqttClientSmoke` when hardware is
+  available.
 - Any change to `EEPROM`, `Preferences`, `FS`, `LittleFS`, or the AIR780EPM
   runner storage adapter must rerun `storage`.
 - Any change to Arduino library staging or target-level compatibility macros

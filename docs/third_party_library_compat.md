@@ -20,6 +20,7 @@ Useful focused runs:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case arduinojson_runtime_smoke -Clean
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduinojson_runtime_smoke,ntpclient_report,pubsubclient_mqtts_ca_smoke,mqttclient_256dpi_smoke" -Clean -ContinueOnError
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "onewire_basic_compile,dallas_temperature_compile,u8g2_ssd1306_compile,adafruit_ssd1306_compile,rtclib_compile,arduino_httpclient_compile,arduino_mqttclient_compile" -Clean -ContinueOnError
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduino_httpclient_runtime_smoke,arduino_mqttclient_runtime_smoke" -Clean -ContinueOnError
 ```
 
 ## Current Matrix
@@ -36,7 +37,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_c
 | `adafruit_ssd1306_compile` | `Adafruit SSD1306` + `Adafruit GFX Library` + `Adafruit BusIO` | Compile-only | Exercises the Adafruit display dependency chain. The runner exports `ARDUINO=10819` and AIR780EPM architecture macros at target level so library source units see the Arduino 1.x path. |
 | `rtclib_compile` | `RTClib` + `Adafruit BusIO` | Compile-only | Exercises `DateTime`, `TimeSpan`, and common RTC wrapper types without touching hardware. |
 | `arduino_httpclient_compile` | `ArduinoHttpClient` | Compile-only | Exercises an HTTP wrapper on top of `CellularClient`. |
+| `arduino_httpclient_runtime_smoke` | `ArduinoHttpClient` | Compile-plus-runtime-pending | Runtime target for `example.com:80` GET over `CellularClient`; should pass after board logs show HTTP status, non-empty body, and `+ARDUINO: ARDUINO_HTTPCLIENT,PASS`. |
 | `arduino_mqttclient_compile` | `ArduinoMqttClient` | Compile-only | Exercises the official Arduino MQTT client wrapper on top of `CellularClient`. |
+| `arduino_mqttclient_runtime_smoke` | `ArduinoMqttClient` | Compile-plus-runtime-pending | Runtime target for plain MQTT publish/subscribe loopback on `broker.emqx.io:1883`; should pass after board logs show connect, subscribe, publish, RX, and `+ARDUINO: ARDUINO_MQTTCLIENT,PASS`. |
 | `sparkfun_scd4x_basic` | `SparkFun SCD4x Arduino Library` | Hardware-observed | Third-party I2C sensor example; previously observed CO2 data on AIR780EPM. |
 | `sht40_basic` | `SHT40` | Hardware-observed | Third-party I2C sensor example; previously observed temperature and humidity output. |
 | `sensirion_sht4x_example_usage` | `Sensirion I2C SHT4x` + `Sensirion Core` | Hardware-observed | Exercises a dependency chain on `Wire`. |
@@ -58,6 +61,8 @@ cases and the new ArduinoJson sketch:
 [library_compat] rtclib_compile                       PASS  compile-only
 [library_compat] arduino_httpclient_compile           PASS  compile-only
 [library_compat] arduino_mqttclient_compile           PASS  compile-only
+[library_compat] arduino_httpclient_runtime_smoke     PASS  compile-plus-runtime-pending
+[library_compat] arduino_mqttclient_runtime_smoke     PASS  compile-plus-runtime-pending
 ```
 
 `ArduinoJsonRuntimeSmoke` was also flashed to AIR780EPM on `COM3`; binary log
@@ -68,6 +73,10 @@ The newly added compile-only cases were validated through
 `scripts\validate_library_compat.ps1` on 2026-04-28. They are compile gates
 only; display, 1-Wire, RTC, HTTP, and ArduinoMqttClient runtime behavior still
 need separate hardware sketches before being marked hardware-observed.
+
+`ArduinoHttpClientRuntimeSmoke` and `ArduinoMqttClientSmoke` are ready for the
+next board session. They have compile-verified binaries, but no hardware log
+claim has been made yet.
 
 ## Policy
 
