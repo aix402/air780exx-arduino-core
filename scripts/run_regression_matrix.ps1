@@ -99,6 +99,9 @@ function Get-ProfileEntries {
                 (New-RegressionEntry -Name "UdpNtpReport" -SketchPath "examples\08.Network\UdpNtpReport" -PassRegex @(
                     "\+ARDUINO: UDP_NTP,PASS"
                 )),
+                (New-RegressionEntry -Name "NTPClientReport" -SketchPath "validation_sketches\NTPClientReport" -PassRegex @(
+                    "\+ARDUINO: NTPCLIENT,PASS"
+                )),
                 (New-RegressionEntry -Name "NetworkTimeReport" -SketchPath "examples\08.Network\NetworkTimeReport" -PassRegex @(
                     "\+ARDUINO: NET_TIME,PASS"
                 ))

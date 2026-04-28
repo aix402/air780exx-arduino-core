@@ -5,6 +5,47 @@
 
 namespace {
 char kEmptyString[] = "";
+
+void formatUnsignedNumber(char *buffer, size_t bufferSize, unsigned long value, unsigned char base) {
+    static const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char reversed[33];
+    size_t length = 0;
+
+    if ((buffer == nullptr) || (bufferSize == 0U)) {
+        return;
+    }
+
+    if ((base < 2U) || (base > 36U)) {
+        base = 10U;
+    }
+
+    do {
+        reversed[length++] = digits[value % base];
+        value /= base;
+    } while ((value != 0UL) && (length < sizeof(reversed)));
+
+    size_t out = 0;
+    while ((length > 0U) && ((out + 1U) < bufferSize)) {
+        buffer[out++] = reversed[--length];
+    }
+    buffer[out] = '\0';
+}
+
+void formatSignedNumber(char *buffer, size_t bufferSize, long value, unsigned char base) {
+    if ((buffer == nullptr) || (bufferSize == 0U)) {
+        return;
+    }
+
+    if ((base == 10U) && (value < 0L)) {
+        buffer[0] = '-';
+        const unsigned long magnitude =
+            static_cast<unsigned long>(-(value + 1L)) + 1UL;
+        formatUnsignedNumber(buffer + 1, bufferSize - 1U, magnitude, base);
+        return;
+    }
+
+    formatUnsignedNumber(buffer, bufferSize, (unsigned long)value, base);
+}
 }
 
 String::String() : buffer_(nullptr), length_(0), capacity_(0) {}
@@ -34,6 +75,30 @@ String::String(const __FlashStringHelper *value) : buffer_(nullptr), length_(0),
 String::String(char value) : buffer_(nullptr), length_(0), capacity_(0) {
     char text[2] = {value, '\0'};
     (void)assign(text, 1U);
+}
+
+String::String(int value, unsigned char base) : buffer_(nullptr), length_(0), capacity_(0) {
+    char text[34] = {0};
+    formatSignedNumber(text, sizeof(text), static_cast<long>(value), base);
+    (void)assign(text, strlen(text));
+}
+
+String::String(unsigned int value, unsigned char base) : buffer_(nullptr), length_(0), capacity_(0) {
+    char text[33] = {0};
+    formatUnsignedNumber(text, sizeof(text), static_cast<unsigned long>(value), base);
+    (void)assign(text, strlen(text));
+}
+
+String::String(long value, unsigned char base) : buffer_(nullptr), length_(0), capacity_(0) {
+    char text[34] = {0};
+    formatSignedNumber(text, sizeof(text), value, base);
+    (void)assign(text, strlen(text));
+}
+
+String::String(unsigned long value, unsigned char base) : buffer_(nullptr), length_(0), capacity_(0) {
+    char text[33] = {0};
+    formatUnsignedNumber(text, sizeof(text), value, base);
+    (void)assign(text, strlen(text));
 }
 
 String::~String() {

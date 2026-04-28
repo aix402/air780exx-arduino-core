@@ -39,6 +39,7 @@ current xmake-native Arduino bridge.
 | TLS HTTP GET | `examples\08.Network\TlsHttpGet` | `L4` | Hardware runtime now reaches `HTTP/1.1 200 OK` over TLS with `TLSERR=0` |
 | MQTTS PubSubClient CA smoke | `validation_sketches\MqttsPubSubClientCaSmoke` | `L4` | Third-party `PubSubClient` over `CellularClientSecure::setCACert()` is hardware-observed through connect / subscribe / publish / RX loopback |
 | UDP NTP report | `examples\08.Network\UdpNtpReport` | `L4` | Hardware runtime now receives a 48-byte NTP packet and valid epoch |
+| NTPClient report | `validation_sketches\NTPClientReport` | `L4` | Third-party `NTPClient` over the `WiFiUDP` compatibility alias is hardware-observed through update, valid epoch, and `PASS` |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |
@@ -84,6 +85,7 @@ Initial automation scope:
 - `examples\08.Network\TlsHttpGet`
 - `validation_sketches\MqttsPubSubClientCaSmoke`
 - `examples\08.Network\UdpNtpReport`
+- `validation_sketches\NTPClientReport`
 - `examples\08.Network\NetworkTimeReport`
 
 ### `storage`

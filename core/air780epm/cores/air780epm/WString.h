@@ -14,6 +14,10 @@ public:
     String(const String &value);
     String(const __FlashStringHelper *value);
     explicit String(char value);
+    explicit String(int value, unsigned char base = 10);
+    explicit String(unsigned int value, unsigned char base = 10);
+    explicit String(long value, unsigned char base = 10);
+    explicit String(unsigned long value, unsigned char base = 10);
     ~String();
 
     String &operator=(const String &value);

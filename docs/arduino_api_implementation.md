@@ -81,6 +81,7 @@ mean the related hardware behavior has been observed on a board.
 | `examples\08.Network\UdpNtpReport` | Hardware-observed | Runtime logs now show `UDP_NTP,PACKET,48`, a real remote IPv4/port, a valid epoch, and `PASS`. |
 | `examples\08.Network\NetworkTimeReport` | Hardware-observed | Runtime logs now show `NET_TIME,EPOCH,<valid>`, `NET_TIME,LOCAL,2026-04-28 16:42:01`, and `NET_TIME,PASS` on AIR780EPM. `Modem.getTimeStatus()` now reports the same post-sync epoch path seen by `time()` / `getLocalTime()`. |
 | `validation_sketches\MqttsPubSubClientCaSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the third-party `PubSubClient` library. |
+| `validation_sketches\NTPClientReport` | Hardware-observed | Third-party `NTPClient` over the `WiFiUDP` alias is hardware-observed through network readiness, NTP update, valid epoch, `TIME_SET,1`, and `PASS`. |
 
 ## NVM And File System
 
@@ -151,6 +152,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\TlsHttpGet
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\validation_sketches\MqttsPubSubClientCaSmoke
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\UdpNtpReport
+powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\validation_sketches\NTPClientReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\NetworkTimeReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\09.NVM\EepromPreferencesReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\10.FileSystem\LittleFSReport
