@@ -322,7 +322,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -
 
 - `configTime()` 只配置 NTP server 和固定 offset，不在调用点长阻塞。
 - `configTzTime()` 先支持固定偏移型 TZ 字符串。
-- `getLocalTime()` 负责等待 NITZ 或 NTP fallback，并写回系统 UTC。
+- `getLocalTime()` 负责等待 NITZ 或 core 内置 UDP NTP fallback，并写回系统 UTC。
 - 完整 DST 规则可以后置，不要在第一轮移植中扩大风险。
 - EC718PM 这套 `mbedtls_ec7xx_config.h` 关闭了默认 entropy source；TLS
   客户端不要再额外依赖 `mbedtls_ctr_drbg_seed()`，应直接使用

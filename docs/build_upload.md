@@ -48,6 +48,25 @@ Generated staged sketch sources and staged third-party libraries:
 runner/air780epm_runner/generated
 ```
 
+## Flash Layout Override
+
+The runner intentionally keeps `runner\air780epm_runner\mem_map_7xx.h`.
+`external\luatos-soc-2024\csdk.lua` auto-detects this file and builds with
+`__USER_MAP_CONF_FILE__="mem_map_7xx.h"`.
+
+Current AIR780EPM Arduino runner layout:
+
+| Region | Value | Notes |
+| --- | --- | --- |
+| AP image/package limit | `0x2c5000` / 2836 KiB | Matches the CSDK package AP limit used for this runner |
+| FOTA region | `0x347000..0x3b7000` / 448 KiB | 352 KiB usable after the 96 KiB hib backup reservation |
+| LittleFS region | `0x3b7000..0x3e1000` / 168 KiB | Kept unchanged |
+| FDB/KV region | `0x3e1000..0x3f1000` / 64 KiB | Kept unchanged |
+
+Removing the runner `mem_map_7xx.h` is not the preferred way to use the default
+layout. It would let SDK feature macros choose the defaults, making Arduino
+package builds less reproducible.
+
 ## Build Commands
 
 Build the default runner app:
@@ -119,6 +138,8 @@ Compile-only regression sweep:
 powershell -ExecutionPolicy Bypass -File .\scripts\run_regression_matrix.ps1 -Profile smoke -Clean
 powershell -ExecutionPolicy Bypass -File .\scripts\run_regression_matrix.ps1 -Profile pinmap_contract -Clean
 powershell -ExecutionPolicy Bypass -File .\scripts\run_regression_matrix.ps1 -Profile sensor_io -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\run_regression_matrix.ps1 -Profile connectivity
+powershell -ExecutionPolicy Bypass -File .\scripts\run_regression_matrix.ps1 -Profile storage
 ```
 
 ## Flash and Log
