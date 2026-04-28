@@ -13,6 +13,7 @@ current xmake-native Arduino bridge.
 | `sensor_io` | Keep real board I/O examples working | compile gate first, selective hardware rerun |
 | `connectivity` | Keep modem and socket-facing API bring-up stable | compile gate first, then SIM-on-board rerun |
 | `storage` | Keep NVM and LittleFS surfaces stable | compile gate first, then reboot/persistence rerun |
+| `library_compat` | Keep third-party Arduino library bridge coverage moving | compile/runtime library probes via `scripts\validate_library_compat.ps1` |
 
 ## Sketch Matrix
 
@@ -42,6 +43,13 @@ current xmake-native Arduino bridge.
 | UDP NTP report | `examples\08.Network\UdpNtpReport` | `L4` | Hardware runtime now receives a 48-byte NTP packet and valid epoch |
 | NTPClient report | `validation_sketches\NTPClientReport` | `L4` | Third-party `NTPClient` over the `WiFiUDP` compatibility alias is hardware-observed through update, valid epoch, and `PASS` |
 | ArduinoJson runtime smoke | `validation_sketches\ArduinoJsonRuntimeSmoke` | `L4` | Third-party `ArduinoJson` parse / mutate / serialize smoke; hardware logs show `ARDUINOJSON_RUNTIME,PASS` |
+| OneWire compile | `validation_sketches\OneWireCompile` | `L2` | Compile-only gate for the Arduino `OneWire` library, including bridge handling for the CSDK `OneWire.h` name collision |
+| DallasTemperature compile | `validation_sketches\DallasTemperatureCompile` | `L2` | Compile-only gate for the common `DallasTemperature` + `OneWire` dependency chain |
+| U8g2 SSD1306 compile | `validation_sketches\U8g2Ssd1306Compile` | `L2` | Compile-only gate for a common I2C OLED constructor and font path |
+| Adafruit SSD1306 compile | `validation_sketches\AdafruitSsd1306Compile` | `L2` | Compile-only gate for `Adafruit SSD1306`, `Adafruit GFX Library`, and `Adafruit BusIO` |
+| RTClib compile | `validation_sketches\RTClibCompile` | `L2` | Compile-only gate for `DateTime`, `TimeSpan`, and RTC wrapper classes |
+| ArduinoHttpClient compile | `validation_sketches\ArduinoHttpClientCompile` | `L2` | Compile-only gate for an HTTP wrapper over `CellularClient` |
+| ArduinoMqttClient compile | `validation_sketches\ArduinoMqttClientCompile` | `L2` | Compile-only gate for the official Arduino MQTT client wrapper over `CellularClient` |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |
@@ -99,6 +107,20 @@ Initial automation scope:
 - `examples\09.NVM\EepromPreferencesReport`
 - `examples\10.FileSystem\LittleFSReport`
 
+### `library_compat`
+
+- `validation_sketches\ArduinoJsonRuntimeSmoke`
+- `validation_sketches\NTPClientReport`
+- `validation_sketches\MqttsPubSubClientCaSmoke`
+- `validation_sketches\Mqtt256dpiSmoke`
+- `validation_sketches\OneWireCompile`
+- `validation_sketches\DallasTemperatureCompile`
+- `validation_sketches\U8g2Ssd1306Compile`
+- `validation_sketches\AdafruitSsd1306Compile`
+- `validation_sketches\RTClibCompile`
+- `validation_sketches\ArduinoHttpClientCompile`
+- `validation_sketches\ArduinoMqttClientCompile`
+
 ## Hardware Rerun Rules
 
 - Any change to pin aliases, variant files, or bus routing must rerun
@@ -113,5 +135,7 @@ Initial automation scope:
   `connectivity`.
 - Any change to `EEPROM`, `Preferences`, `FS`, `LittleFS`, or the AIR780EPM
   runner storage adapter must rerun `storage`.
+- Any change to Arduino library staging or target-level compatibility macros
+  must rerun the focused `library_compat` cases affected by that bridge change.
 - Any linker, runner, or upload-script change must rerun `Blink` upload/log
   verification before broader claims are updated.

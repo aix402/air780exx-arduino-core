@@ -72,6 +72,24 @@ function Get-RelativePathCompat {
     return $pathFull.Substring($baseFull.Length)
 }
 
+function Get-RelativeIncludePath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseDirectory,
+        [Parameter(Mandatory = $true)]
+        [string]$TargetPath
+    )
+
+    $baseFull = Get-FullPathString $BaseDirectory
+    if (-not $baseFull.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $baseFull += [System.IO.Path]::DirectorySeparatorChar
+    }
+
+    $baseUri = [System.Uri]::new($baseFull)
+    $targetUri = [System.Uri]::new((Get-FullPathString $TargetPath))
+    return [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace("\", "/")
+}
+
 function Clear-GeneratedSketch {
     $runnerRoot = Get-FullPathString $runnerFullPath
     $generatedRoot = Get-FullPathString $generatedSketchDir
@@ -588,6 +606,40 @@ function Get-ArduinoLibraryStageManifestData {
     }
 }
 
+function Update-ArduinoOneWireIncludeCollision {
+    param([Parameter(Mandatory = $true)][string]$StageDirectory)
+
+    $oneWireHeader = Join-Path $StageDirectory "libraries\OneWire\OneWire.h"
+    if (-not (Test-Path -LiteralPath $oneWireHeader)) {
+        return
+    }
+
+    $pattern = '(?m)^(\s*#\s*include\s*)[<"]OneWire\.h[>"]'
+    $sourceFiles = Get-ChildItem -LiteralPath $StageDirectory -Recurse -File | Where-Object {
+        $_.Extension -in @(".ino", ".h", ".hh", ".hpp", ".c", ".cc", ".cpp", ".cxx")
+    }
+
+    $changed = 0
+    foreach ($file in $sourceFiles) {
+        $content = [System.IO.File]::ReadAllText($file.FullName)
+        if (-not [regex]::IsMatch($content, $pattern)) {
+            continue
+        }
+
+        $relativeHeader = Get-RelativeIncludePath -BaseDirectory $file.Directory.FullName -TargetPath $oneWireHeader
+        $replacement = '$1"' + $relativeHeader + '"'
+        $updated = [regex]::Replace($content, $pattern, $replacement)
+        if ($updated -ne $content) {
+            Write-Utf8NoBom -Path $file.FullName -Content $updated
+            $changed++
+        }
+    }
+
+    if ($changed -gt 0) {
+        Write-Output ("[arduino_bridge] rewrote OneWire include collision in {0} staged file(s)" -f $changed)
+    }
+}
+
 function Stage-ArduinoLibraries {
     param(
         [string]$SketchDirectory,
@@ -727,6 +779,7 @@ function Stage-ArduinoSketch {
     }
 
     $libraryStage = Stage-ArduinoLibraries -SketchDirectory $sketchDir -StageDirectory $generatedSketchDir
+    Update-ArduinoOneWireIncludeCollision -StageDirectory $generatedSketchDir
     $stagedLibraryReports = @($libraryStage.libraries | Where-Object { $null -ne $_ })
     $manifest = [ordered]@{
         sketch_dir = $sketchDir

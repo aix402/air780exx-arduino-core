@@ -22,6 +22,7 @@ mean the related hardware behavior has been observed on a board.
 | `Stream` | Compile-enabled | Timeout reads, `find()`, `parseInt()`, `parseFloat()`, `readString()`. |
 | `String` | Compile-enabled | Expanded to the common Arduino/ESP32 shape used by third-party libraries: numeric constructors and concat, substring/search, trim/case/replace, conversion helpers, byte copy helpers, comparisons, and `StringSumHelper`. |
 | `F()` / `PSTR()` / `PROGMEM` | Compile-enabled | Currently compatibility macros only; AIR780EPM does not use AVR program space semantics. |
+| Platform macros | Compile-enabled | `ARDUINO=10819`, `ARDUINO_ARCH_EC718PM`, and `ARDUINO_ARCH_AIR780EPM` are exported at runner target level as well as from `Arduino.h`, so third-party library source files can select their Arduino 1.x code paths before including `Arduino.h`. |
 
 ## Bus APIs
 
@@ -120,10 +121,12 @@ mean the related hardware behavior has been observed on a board.
 | Library source staging | Compile-verified | Copies root, `src`, `utility`, and `util` C/C++/assembly sources into the xmake runner. |
 | Header include paths | Compile-verified | Adds staged header directories from libraries into xmake. |
 | Direct library dependency closure | Compile-verified | Walks library source `#include` lines to stage dependent sketchbook libraries. |
+| `OneWire.h` include collision handling | Compile-verified | The EC718PM CSDK has its own `OneWire.h`. When the Arduino `OneWire` library is staged, generated sketch/library copies rewrite `#include <OneWire.h>` to a relative staged-library include path, without modifying the installed library or SDK. |
 | Header-only libraries | Compile-verified | ArduinoJson `JsonGeneratorExample` compiles. |
 | Source libraries | Hardware-observed | SparkFun SCD4x `Example1_BasicReadings` compiles and reports CO2 data on AIR780EPM over `Wire`/I2C0. |
 | Compatibility matrix script | Compile-verified | `scripts\validate_library_compat.ps1` runs selected third-party probes and reports missing local libraries as `SKIP`. |
 | ArduinoJson runtime smoke | Hardware-observed | `validation_sketches\ArduinoJsonRuntimeSmoke` compiles with local ArduinoJson `7.4.3`; board logs on `COM3` at `921600` show repeated `+ARDUINO: ARDUINOJSON_RUNTIME,PASS,LEN,62,...`. |
+| 1-Wire / display / RTC / network wrapper compile probes | Compile-verified | `OneWire`, `DallasTemperature`, `U8g2`, `Adafruit SSD1306`, `RTClib`, `ArduinoHttpClient`, and `ArduinoMqttClient` now pass compile-only compatibility cases through the bridge. |
 
 ## Current Compile Checks
 
@@ -163,6 +166,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\10.FileSystem\LittleFSReport
 powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\ArduinoJsonRuntimeSmoke -Clean
 powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduinojson_runtime_smoke,ntpclient_report,pubsubclient_mqtts_ca_smoke,mqttclient_256dpi_smoke" -Clean -ContinueOnError
+powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "onewire_basic_compile,dallas_temperature_compile,u8g2_ssd1306_compile,adafruit_ssd1306_compile,rtclib_compile,arduino_httpclient_compile,arduino_mqttclient_compile" -Clean -ContinueOnError
 
 & "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\SparkFun_SCD4x_Arduino_Library\examples\Example1_BasicReadings" --build-path ".\.arduino-ide-work\SCD4xBasic" --clean
 & "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\ArduinoJson\examples\JsonGeneratorExample" --build-path ".\.arduino-ide-work\ArduinoJsonGenerator" --clean
@@ -175,6 +179,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -
   verified for normal source libraries and header-only libraries, but do not yet
   implement full Arduino builder behavior such as architecture filtering,
   precompiled library archives, or platform-specific library recipes.
+- The `OneWire.h` collision workaround is intentionally bridge-local and only
+  rewrites generated staging copies. If future CSDK include ordering changes,
+  this should be rechecked against `OneWire` and `DallasTemperature`.
 - `String` now covers the common Arduino/ESP32 methods needed by current
   probes, but ESP32-specific move/copy internals are not a public compatibility
   promise yet.

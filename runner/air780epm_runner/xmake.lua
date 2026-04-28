@@ -20,7 +20,7 @@ add_includedirs(luatos_root .. "/components/lcd", {public = true})
 target(project_name, function()
     set_kind("static")
     set_targetdir("$(buildir)/" .. project_name .. "/")
-    description_csdk()
+    add_defines("ARDUINO=10819", "ARDUINO_ARCH_EC718PM=1", "ARDUINO_ARCH_AIR780EPM=1", {public = true})
 
     add_includedirs("./inc", {public = true})
     if os.isdir(path.join(project_dir, "generated")) then
@@ -41,6 +41,9 @@ target(project_name, function()
             add_includedirs(path.directory(header), {public = true})
         end
     end
+
+    description_csdk()
+
     add_includedirs("../../core/air780epm/cores/air780epm", {public = true})
     add_includedirs("../../core/air780epm/variants/air780epm_dev", {public = true})
 

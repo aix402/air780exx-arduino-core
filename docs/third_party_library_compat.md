@@ -19,6 +19,7 @@ Useful focused runs:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case arduinojson_runtime_smoke -Clean
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduinojson_runtime_smoke,ntpclient_report,pubsubclient_mqtts_ca_smoke,mqttclient_256dpi_smoke" -Clean -ContinueOnError
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "onewire_basic_compile,dallas_temperature_compile,u8g2_ssd1306_compile,adafruit_ssd1306_compile,rtclib_compile,arduino_httpclient_compile,arduino_mqttclient_compile" -Clean -ContinueOnError
 ```
 
 ## Current Matrix
@@ -29,6 +30,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_c
 | `ntpclient_report` | `NTPClient` | Hardware-observed | Uses `WiFiUDP` compatibility alias over the cellular UDP layer. |
 | `pubsubclient_mqtts_ca_smoke` | `PubSubClient` | Hardware-observed | Uses `CellularClientSecure::setCACert()` and MQTTS loopback. |
 | `mqttclient_256dpi_smoke` | `MQTT` by 256dpi | Hardware-observed | Uses plain `CellularClient` and MQTT loopback on `broker.emqx.io:1883`. |
+| `onewire_basic_compile` | `OneWire` | Compile-only | Exercises object creation, search API, and GPIO timing helper calls. The bridge rewrites staged `OneWire.h` includes to avoid the CSDK header name collision. |
+| `dallas_temperature_compile` | `DallasTemperature` + `OneWire` | Compile-only | Exercises the common DS18B20 dependency chain without requiring a sensor response. |
+| `u8g2_ssd1306_compile` | `U8g2` | Compile-only | Exercises a common SSD1306 I2C constructor and font path. |
+| `adafruit_ssd1306_compile` | `Adafruit SSD1306` + `Adafruit GFX Library` + `Adafruit BusIO` | Compile-only | Exercises the Adafruit display dependency chain. The runner exports `ARDUINO=10819` and AIR780EPM architecture macros at target level so library source units see the Arduino 1.x path. |
+| `rtclib_compile` | `RTClib` + `Adafruit BusIO` | Compile-only | Exercises `DateTime`, `TimeSpan`, and common RTC wrapper types without touching hardware. |
+| `arduino_httpclient_compile` | `ArduinoHttpClient` | Compile-only | Exercises an HTTP wrapper on top of `CellularClient`. |
+| `arduino_mqttclient_compile` | `ArduinoMqttClient` | Compile-only | Exercises the official Arduino MQTT client wrapper on top of `CellularClient`. |
 | `sparkfun_scd4x_basic` | `SparkFun SCD4x Arduino Library` | Hardware-observed | Third-party I2C sensor example; previously observed CO2 data on AIR780EPM. |
 | `sht40_basic` | `SHT40` | Hardware-observed | Third-party I2C sensor example; previously observed temperature and humidity output. |
 | `sensirion_sht4x_example_usage` | `Sensirion I2C SHT4x` + `Sensirion Core` | Hardware-observed | Exercises a dependency chain on `Wire`. |
@@ -43,11 +51,23 @@ cases and the new ArduinoJson sketch:
 [library_compat] ntpclient_report                     PASS  compile-plus-runtime-verified
 [library_compat] pubsubclient_mqtts_ca_smoke          PASS  compile-plus-runtime-verified
 [library_compat] mqttclient_256dpi_smoke              PASS  compile-plus-runtime-verified
+[library_compat] onewire_basic_compile                PASS  compile-only
+[library_compat] dallas_temperature_compile           PASS  compile-only
+[library_compat] u8g2_ssd1306_compile                 PASS  compile-only
+[library_compat] adafruit_ssd1306_compile             PASS  compile-only
+[library_compat] rtclib_compile                       PASS  compile-only
+[library_compat] arduino_httpclient_compile           PASS  compile-only
+[library_compat] arduino_mqttclient_compile           PASS  compile-only
 ```
 
 `ArduinoJsonRuntimeSmoke` was also flashed to AIR780EPM on `COM3`; binary log
 capture at `921600` observed repeated
 `+ARDUINO: ARDUINOJSON_RUNTIME,PASS,LEN,62,...` lines.
+
+The newly added compile-only cases were validated through
+`scripts\validate_library_compat.ps1` on 2026-04-28. They are compile gates
+only; display, 1-Wire, RTC, HTTP, and ArduinoMqttClient runtime behavior still
+need separate hardware sketches before being marked hardware-observed.
 
 ## Policy
 

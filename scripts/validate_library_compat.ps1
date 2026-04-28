@@ -129,6 +129,62 @@ function Get-LibraryCompatCatalog {
             -RequiredLibraries @("MQTT") `
             -Note "Runtime validation uses the 256dpi MQTTClient wrapper over CellularClient."
         New-LibraryCompatCase `
+            -Id "onewire_basic_compile" `
+            -Library "OneWire" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\OneWireCompile") `
+            -Tier "compile-only" `
+            -Hardware "optional 1-Wire device" `
+            -RequiredLibraries @("OneWire") `
+            -Note "Exercises OneWire object creation, search API, and GPIO timing helpers."
+        New-LibraryCompatCase `
+            -Id "dallas_temperature_compile" `
+            -Library "DallasTemperature + OneWire" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\DallasTemperatureCompile") `
+            -Tier "compile-only" `
+            -Hardware "optional DS18B20" `
+            -RequiredLibraries @("DallasTemperature", "OneWire") `
+            -Note "Exercises DallasTemperature dependency chain without requiring a sensor response."
+        New-LibraryCompatCase `
+            -Id "u8g2_ssd1306_compile" `
+            -Library "U8g2" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\U8g2Ssd1306Compile") `
+            -Tier "compile-only" `
+            -Hardware "optional SSD1306 I2C display" `
+            -RequiredLibraries @("U8g2") `
+            -Note "Exercises a common U8g2 I2C constructor and font path."
+        New-LibraryCompatCase `
+            -Id "adafruit_ssd1306_compile" `
+            -Library "Adafruit SSD1306 + Adafruit GFX Library + Adafruit BusIO" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\AdafruitSsd1306Compile") `
+            -Tier "compile-only" `
+            -Hardware "optional SSD1306 I2C display" `
+            -RequiredLibraries @("Adafruit SSD1306", "Adafruit GFX Library", "Adafruit BusIO") `
+            -Note "Exercises Adafruit's common SSD1306 display dependency chain."
+        New-LibraryCompatCase `
+            -Id "rtclib_compile" `
+            -Library "RTClib + Adafruit BusIO" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\RTClibCompile") `
+            -Tier "compile-only" `
+            -Hardware "optional DS3231/PCF8523 RTC" `
+            -RequiredLibraries @("RTClib", "Adafruit BusIO") `
+            -Note "Exercises DateTime/TimeSpan and RTC wrapper types without touching hardware."
+        New-LibraryCompatCase `
+            -Id "arduino_httpclient_compile" `
+            -Library "ArduinoHttpClient" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\ArduinoHttpClientCompile") `
+            -Tier "compile-only" `
+            -Hardware "none" `
+            -RequiredLibraries @("ArduinoHttpClient") `
+            -Note "Exercises a common HTTP Client wrapper on top of CellularClient."
+        New-LibraryCompatCase `
+            -Id "arduino_mqttclient_compile" `
+            -Library "ArduinoMqttClient" `
+            -SketchPath (Join-Path $repoRoot "validation_sketches\ArduinoMqttClientCompile") `
+            -Tier "compile-only" `
+            -Hardware "none" `
+            -RequiredLibraries @("ArduinoMqttClient") `
+            -Note "Exercises the official Arduino MQTT client wrapper on top of CellularClient."
+        New-LibraryCompatCase `
             -Id "sparkfun_scd4x_basic" `
             -Library "SparkFun SCD4x Arduino Library" `
             -SketchPath (Join-Path $librariesRoot "SparkFun_SCD4x_Arduino_Library\examples\Example1_BasicReadings") `
