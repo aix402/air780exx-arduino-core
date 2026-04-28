@@ -40,13 +40,14 @@
 | Modem identity / signal / cell 详细信息 | `L4` | `Modem.getIdentity()` 已修复；`ModemInfoReport` 现已实机跑通到运行态摘要，看到 `WAIT_OK=1`、`REGISTERED=1`、`NET_READY=1`、`HAS_IPV4=1` 和真实 IPv4，说明 `waitForNetwork()` / 后续状态路径已收口 |
 | TCP / TLS / UDP smoke | `L4` | `TcpHttpGet`、`TlsHttpGet`、`UdpNtpReport` 已实机跑通；TLS 的 `-52` 根因已定位为 EC718PM mbedTLS 配置下不应再调用无效的 `ctr_drbg_seed()`，当前已改为直接走 `luat_crypto_trng()` |
 | Arduino network time helpers | `L4` | `NetworkTimeReport` 已实机跑通；`configTime()` / `getLocalTime()` 已能拿到有效 epoch 和格式化本地时间，当前 `configTzTime()` 先支持固定偏移型 POSIX TZ 字符串 |
+| CA 校验型 MQTTS / PubSubClient | `L4` | `MqttsPubSubClientCaSmoke` 已实机跑通；`CellularClientSecure::setCACert()` + 第三方 `PubSubClient` 能完成 TLS MQTT 连接、订阅、发布和 loopback 接收，最终看到 `+ARDUINO: MQTTS_PUBSUB_CA,PASS` |
 | `EEPROM` / `Preferences` | `L4`~`L5` partial | 已实机验证可写入并在再次烧录启动后看到 `PREV/NEXT` 递增；纯 reset / 断电验证仍可补 |
 | `LittleFS` | `L4` | `LittleFSReport` 已实机验证 `mkdir/open/write/read/rename/readdir/remove/rmdir` |
 
 当前建议推进顺序：
 
 1. `Servo` 板级收口。
-2. 继续补 CA 校验型 TLS、MQTTS 等更高层联网能力。
+2. 把已跑通的 CA / MQTTS 路径纳入 connectivity 回归。
 3. 视需要再补 `EEPROM` / `Preferences` 的纯 reset / 断电验证。
 4. 继续补 `Wire1` / `SPI` / `SPI1` / `Serial2` / `Serial3` 的板级验证。
 

@@ -10,6 +10,22 @@
 
 #include "pins_arduino.h"
 
+#ifdef __cplusplus
+#ifndef AIR780EPM_HAS_LIBC_STRNLEN
+static inline size_t strnlen(const char *s, size_t maxlen) {
+    if (s == nullptr) {
+        return 0;
+    }
+
+    size_t n = 0;
+    while ((n < maxlen) && (s[n] != '\0')) {
+        ++n;
+    }
+    return n;
+}
+#endif
+#endif
+
 #ifndef ARDUINO
 #define ARDUINO 10819
 #endif

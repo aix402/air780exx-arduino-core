@@ -37,6 +37,7 @@ current xmake-native Arduino bridge.
 | Modem info report | `examples\08.Network\ModemInfoReport` | `L4` | Hardware runtime summary now shows `WAIT_OK=1`, `REGISTERED=1`, `NET_READY=1`, `HAS_IPV4=1`, and a real IPv4, which proves the sketch completed its wait/status path and entered `loop()` |
 | TCP HTTP GET | `examples\08.Network\TcpHttpGet` | `L4` | Hardware runtime now reaches `HTTP/1.1 200 OK` over plain TCP |
 | TLS HTTP GET | `examples\08.Network\TlsHttpGet` | `L4` | Hardware runtime now reaches `HTTP/1.1 200 OK` over TLS with `TLSERR=0` |
+| MQTTS PubSubClient CA smoke | `validation_sketches\MqttsPubSubClientCaSmoke` | `L4` | Third-party `PubSubClient` over `CellularClientSecure::setCACert()` is hardware-observed through connect / subscribe / publish / RX loopback |
 | UDP NTP report | `examples\08.Network\UdpNtpReport` | `L4` | Hardware runtime now receives a 48-byte NTP packet and valid epoch |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
@@ -81,6 +82,7 @@ Initial automation scope:
 - `examples\08.Network\ModemInfoReport`
 - `examples\08.Network\TcpHttpGet`
 - `examples\08.Network\TlsHttpGet`
+- `validation_sketches\MqttsPubSubClientCaSmoke`
 - `examples\08.Network\UdpNtpReport`
 - `examples\08.Network\NetworkTimeReport`
 
@@ -99,7 +101,7 @@ Initial automation scope:
   it exists.
 - Any change to the PWM ownership model or `Servo.cpp` must rerun `smoke` and
   `examples\07.Servo\ServoPulseReport`.
-- Any change to modem, TCP, TLS, or UDP runner code must rerun
+- Any change to modem, TCP, TLS, MQTT, or UDP runner code must rerun
   `connectivity`.
 - Any change to `EEPROM`, `Preferences`, `FS`, `LittleFS`, or the AIR780EPM
   runner storage adapter must rerun `storage`.

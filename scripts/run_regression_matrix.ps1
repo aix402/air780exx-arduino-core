@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("smoke", "pinmap_contract", "sensor_io")]
+    [ValidateSet("smoke", "pinmap_contract", "sensor_io", "connectivity", "storage")]
     [string]$Profile = "smoke",
     [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
     [string]$ComPort,
@@ -77,6 +77,44 @@ function Get-ProfileEntries {
             }
 
             return $entries
+        }
+        "connectivity" {
+            return @(
+                (New-RegressionEntry -Name "NetworkApiP1Report" -SketchPath "validation_sketches\NetworkApiP1Report"),
+                (New-RegressionEntry -Name "NetworkStatusReport" -SketchPath "examples\08.Network\NetworkStatusReport" -PassRegex @(
+                    "\+ARDUINO: MODEM_STATUS,READY"
+                )),
+                (New-RegressionEntry -Name "ModemInfoReport" -SketchPath "examples\08.Network\ModemInfoReport" -PassRegex @(
+                    "\+ARDUINO: MODEM_INFO,READY"
+                )),
+                (New-RegressionEntry -Name "TcpHttpGet" -SketchPath "examples\08.Network\TcpHttpGet" -PassRegex @(
+                    "\+ARDUINO: TCP_HTTP,PASS"
+                )),
+                (New-RegressionEntry -Name "TlsHttpGet" -SketchPath "examples\08.Network\TlsHttpGet" -PassRegex @(
+                    "\+ARDUINO: TLS_HTTP,PASS"
+                )),
+                (New-RegressionEntry -Name "MqttsPubSubClientCaSmoke" -SketchPath "validation_sketches\MqttsPubSubClientCaSmoke" -PassRegex @(
+                    "\+ARDUINO: MQTTS_PUBSUB_CA,PASS"
+                )),
+                (New-RegressionEntry -Name "UdpNtpReport" -SketchPath "examples\08.Network\UdpNtpReport" -PassRegex @(
+                    "\+ARDUINO: UDP_NTP,PASS"
+                )),
+                (New-RegressionEntry -Name "NetworkTimeReport" -SketchPath "examples\08.Network\NetworkTimeReport" -PassRegex @(
+                    "\+ARDUINO: NET_TIME,PASS"
+                ))
+            )
+        }
+        "storage" {
+            return @(
+                (New-RegressionEntry -Name "EepromPreferencesReport" -SketchPath "examples\09.NVM\EepromPreferencesReport" -PassRegex @(
+                    "\+ARDUINO: NVM,EEPROM_COMMIT,OK",
+                    "\+ARDUINO: NVM,PREFS_BEGIN,OK",
+                    "\+ARDUINO: NVM,READY"
+                )),
+                (New-RegressionEntry -Name "LittleFSReport" -SketchPath "examples\10.FileSystem\LittleFSReport" -PassRegex @(
+                    "\+ARDUINO: LITTLEFS,PASS"
+                ))
+            )
         }
         default {
             throw "Unknown regression profile: $ProfileName"
