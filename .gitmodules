@@ -1,0 +1,10 @@
+[submodule "external/LuatOS"]
+	path = external/LuatOS
+	url = https://gitee.com/openLuat/LuatOS.git
+[submodule "external/luatos-soc-2024"]
+	path = external/luatos-soc-2024
+	url = http://sh.air32.cn:168/openLuat/luatos-soc-2024.git
+	ignore = untracked
+[submodule "tools/luatos-cli"]
+	path = tools/luatos-cli
+	url = https://github.com/wendal/luatos-cli.git

@@ -1,0 +1,14 @@
+air780epm_dev.name=AIR780EPM Dev Board
+
+air780epm_dev.build.board=AIR780EPM_DEV
+air780epm_dev.build.core=air780epm
+air780epm_dev.build.variant=air780epm_dev
+air780epm_dev.build.mcu=ec718pm
+air780epm_dev.build.f_cpu=26000000L
+
+air780epm_dev.upload.tool=air780epm_usb
+air780epm_dev.upload.tool.default=air780epm_usb
+air780epm_dev.upload.tool.serial=air780epm_usb
+air780epm_dev.upload.protocol=serial
+air780epm_dev.upload.speed=921600
+air780epm_dev.monitor.speed=921600
