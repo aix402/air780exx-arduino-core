@@ -264,6 +264,7 @@ int arduinoCoreTcpRead(int socketId, uint8_t *buffer, uint32_t size, int peek, i
 {
     int result;
     int flags = MSG_DONTWAIT;
+    int error;
 
     if ((socketId < 0) || (buffer == NULL) || (size == 0U))
     {
@@ -286,16 +287,17 @@ int arduinoCoreTcpRead(int socketId, uint8_t *buffer, uint32_t size, int peek, i
     if (result == 0)
     {
         arduinoTcpSetError(outError, 0);
-        return -1;
+        return 0;
     }
 
-    if ((sock_get_errno(socketId) == EWOULDBLOCK) || (sock_get_errno(socketId) == EAGAIN))
+    error = sock_get_errno(socketId);
+    if ((error == 0) || (error == EWOULDBLOCK) || (error == EAGAIN))
     {
         arduinoTcpSetError(outError, 0);
         return 0;
     }
 
-    arduinoTcpSetError(outError, sock_get_errno(socketId));
+    arduinoTcpSetError(outError, error);
     return -1;
 }
 
@@ -321,11 +323,11 @@ int arduinoCoreTcpIsConnected(int socketId, int32_t *outError)
     if (result == 0)
     {
         arduinoTcpSetError(outError, 0);
-        return 0;
+        return 1;
     }
 
     error = sock_get_errno(socketId);
-    if ((error == EWOULDBLOCK) || (error == EAGAIN))
+    if ((error == 0) || (error == EWOULDBLOCK) || (error == EAGAIN))
     {
         arduinoTcpSetError(outError, 0);
         return 1;

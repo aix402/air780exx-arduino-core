@@ -24,6 +24,23 @@ static inline size_t strnlen(const char *s, size_t maxlen) {
     return n;
 }
 #endif
+
+#ifndef AIR780EPM_HAS_LIBC_STRDUP
+static inline char *strdup(const char *s) {
+    if (s == nullptr) {
+        return nullptr;
+    }
+
+    const size_t length = strlen(s) + 1U;
+    char *copy = static_cast<char *>(malloc(length));
+    if (copy == nullptr) {
+        return nullptr;
+    }
+
+    memcpy(copy, s, length);
+    return copy;
+}
+#endif
 #endif
 
 #ifndef ARDUINO

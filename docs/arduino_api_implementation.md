@@ -70,6 +70,7 @@ mean the related hardware behavior has been observed on a board.
 | `AIR780EPMClient` | Hardware-observed | `TcpHttpGet` was flashed and runtime-verified on AIR780EPM. The board reached `HTTP/1.1 200 OK` from `example.com:80`. |
 | `AIR780EPMTLSClient` | Hardware-observed | `TlsHttpGet` was flashed and runtime-verified on AIR780EPM. The board reached `HTTP/1.1 200 OK` from `example.com:443` with `CellularClientSecure::setInsecure()`. Root cause for the earlier `-52` failure was not DNS, but `mbedtls_ctr_drbg_seed()` running under the EC718PM `mbedtls_ec7xx_config.h` profile where default entropy sources are disabled. The fix was to remove that unused DRBG seeding path and back the TLS RNG callback with `luat_crypto_trng()` directly. |
 | `CellularClientSecure::setCACert()` + `PubSubClient` | Hardware-observed | `MqttsPubSubClientCaSmoke` was flashed and runtime-verified on AIR780EPM. The board connected to `airtest.openluat.com:8888`, subscribed, published, received its loopback payload through the `PubSubClient` callback, and printed `+ARDUINO: MQTTS_PUBSUB_CA,PASS`. |
+| `CellularClient` + `MQTT by 256dpi` | Hardware-observed | `Mqtt256dpiSmoke` was flashed and runtime-verified on AIR780EPM with the third-party `MQTT` library by 256dpi. The board connected to the public plain MQTT broker `broker.emqx.io:1883`, subscribed, published, received its loopback payload through the 256dpi callback, and printed `+ARDUINO: MQTT_256DPI,PASS`. |
 | `AIR780EPMUDP` | Hardware-observed | `UdpNtpReport` was flashed and runtime-verified on AIR780EPM. The board received a 48-byte NTP packet from `pool.ntp.org` and reported a valid epoch. |
 | `configTime()` / `configTzTime()` / `getLocalTime()` | Hardware-observed | First Arduino-compatible time helpers are now present. `configTime()` stores fixed-offset NTP config, `configTzTime()` currently supports fixed-offset POSIX TZ strings such as `CST-8`, and `getLocalTime()` first accepts an already-valid system time / NITZ result, then falls back to the core's built-in UDP NTP request path if needed. |
 | `WiFiClient`, `WiFiClientSecure`, `WiFiUdp` aliases | Compile-enabled | Compatibility aliases only; they map to cellular-backed AIR780EPM client classes, not real Wi-Fi hardware. |
@@ -81,6 +82,7 @@ mean the related hardware behavior has been observed on a board.
 | `examples\08.Network\UdpNtpReport` | Hardware-observed | Runtime logs now show `UDP_NTP,PACKET,48`, a real remote IPv4/port, a valid epoch, and `PASS`. |
 | `examples\08.Network\NetworkTimeReport` | Hardware-observed | Runtime logs now show `NET_TIME,EPOCH,<valid>`, `NET_TIME,LOCAL,2026-04-28 16:42:01`, and `NET_TIME,PASS` on AIR780EPM. `Modem.getTimeStatus()` now reports the same post-sync epoch path seen by `time()` / `getLocalTime()`. |
 | `validation_sketches\MqttsPubSubClientCaSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the third-party `PubSubClient` library. |
+| `validation_sketches\Mqtt256dpiSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the third-party `MQTT` library by 256dpi against `broker.emqx.io:1883`. |
 | `validation_sketches\NTPClientReport` | Hardware-observed | Third-party `NTPClient` over the `WiFiUDP` alias is hardware-observed through network readiness, NTP update, valid epoch, `TIME_SET,1`, and `PASS`. |
 
 ## NVM And File System
@@ -151,6 +153,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\TcpHttpGet
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\TlsHttpGet
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\validation_sketches\MqttsPubSubClientCaSmoke
+powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\validation_sketches\Mqtt256dpiSmoke
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\UdpNtpReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\validation_sketches\NTPClientReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\NetworkTimeReport
@@ -191,9 +194,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
   but the other PWM routes and frequency changes have not been measured yet.
 - `Servo` is compile-enabled on top of PWM, but no AIR780EPM servo pulse output
   has been hardware-observed yet.
-- TCP, TLS, UDP, first-pass network time helpers, and PubSubClient-backed CA
-  MQTTS are now hardware-observed. Other MQTT libraries still need their own
-  compatibility smokes.
+- TCP, TLS, UDP, first-pass network time helpers, PubSubClient-backed CA MQTTS,
+  and MQTT by 256dpi over plain TCP are now hardware-observed. Other MQTT
+  libraries still need their own compatibility smokes.
 - `configTzTime()` is intentionally first-pass only. Fixed-offset POSIX TZ
   strings are supported; full DST rule parsing is not.
 - Fresh-boot `luatos-cli log view-binary --probe` capture can miss one-shot

@@ -38,6 +38,7 @@ current xmake-native Arduino bridge.
 | TCP HTTP GET | `examples\08.Network\TcpHttpGet` | `L4` | Hardware runtime now reaches `HTTP/1.1 200 OK` over plain TCP |
 | TLS HTTP GET | `examples\08.Network\TlsHttpGet` | `L4` | Hardware runtime now reaches `HTTP/1.1 200 OK` over TLS with `TLSERR=0` |
 | MQTTS PubSubClient CA smoke | `validation_sketches\MqttsPubSubClientCaSmoke` | `L4` | Third-party `PubSubClient` over `CellularClientSecure::setCACert()` is hardware-observed through connect / subscribe / publish / RX loopback |
+| MQTT 256dpi smoke | `validation_sketches\Mqtt256dpiSmoke` | `L4` | Third-party `MQTT` by 256dpi over plain `CellularClient` is hardware-observed through connect / subscribe / publish / RX loopback on `broker.emqx.io:1883` |
 | UDP NTP report | `examples\08.Network\UdpNtpReport` | `L4` | Hardware runtime now receives a 48-byte NTP packet and valid epoch |
 | NTPClient report | `validation_sketches\NTPClientReport` | `L4` | Third-party `NTPClient` over the `WiFiUDP` compatibility alias is hardware-observed through update, valid epoch, and `PASS` |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
@@ -84,6 +85,7 @@ Initial automation scope:
 - `examples\08.Network\TcpHttpGet`
 - `examples\08.Network\TlsHttpGet`
 - `validation_sketches\MqttsPubSubClientCaSmoke`
+- `validation_sketches\Mqtt256dpiSmoke`
 - `examples\08.Network\UdpNtpReport`
 - `validation_sketches\NTPClientReport`
 - `examples\08.Network\NetworkTimeReport`

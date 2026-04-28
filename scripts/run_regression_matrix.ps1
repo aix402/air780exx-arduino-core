@@ -96,6 +96,9 @@ function Get-ProfileEntries {
                 (New-RegressionEntry -Name "MqttsPubSubClientCaSmoke" -SketchPath "validation_sketches\MqttsPubSubClientCaSmoke" -PassRegex @(
                     "\+ARDUINO: MQTTS_PUBSUB_CA,PASS"
                 )),
+                (New-RegressionEntry -Name "Mqtt256dpiSmoke" -SketchPath "validation_sketches\Mqtt256dpiSmoke" -PassRegex @(
+                    "\+ARDUINO: MQTT_256DPI,PASS"
+                )),
                 (New-RegressionEntry -Name "UdpNtpReport" -SketchPath "examples\08.Network\UdpNtpReport" -PassRegex @(
                     "\+ARDUINO: UDP_NTP,PASS"
                 )),
