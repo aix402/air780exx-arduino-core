@@ -105,23 +105,12 @@ void setup() {
     return;
   }
 
-  uint32_t bodyBytes = 0;
-  const unsigned long readStart = millis();
-  while ((millis() - readStart) < 10000UL) {
-    while (httpClient.available() > 0) {
-      const int c = httpClient.read();
-      if (c < 0) {
-        break;
-      }
-      bodyBytes++;
-    }
+  const long contentLength = httpClient.contentLength();
+  Serial.print("+ARDUINO: ARDUINO_HTTPCLIENT,CONTENT_LENGTH,");
+  Serial.println(contentLength);
 
-    if (!httpClient.connected()) {
-      break;
-    }
-
-    delay(10);
-  }
+  const String body = httpClient.responseBody();
+  const uint32_t bodyBytes = (uint32_t)body.length();
 
   Serial.print("+ARDUINO: ARDUINO_HTTPCLIENT,BODY_BYTES,");
   Serial.println((unsigned long)bodyBytes);

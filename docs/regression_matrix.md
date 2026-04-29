@@ -50,8 +50,8 @@ current xmake-native Arduino bridge.
 | RTClib compile | `validation_sketches\RTClibCompile` | `L2` | Compile-only gate for `DateTime`, `TimeSpan`, and RTC wrapper classes |
 | ArduinoHttpClient compile | `validation_sketches\ArduinoHttpClientCompile` | `L2` | Compile-only gate for an HTTP wrapper over `CellularClient` |
 | ArduinoMqttClient compile | `validation_sketches\ArduinoMqttClientCompile` | `L2` | Compile-only gate for the official Arduino MQTT client wrapper over `CellularClient` |
-| ArduinoHttpClient runtime smoke | `validation_sketches\ArduinoHttpClientRuntimeSmoke` | `L2` -> `L4` | Compile-ready GET smoke for `ArduinoHttpClient` over `CellularClient`; hardware runtime pending |
-| ArduinoMqttClient runtime smoke | `validation_sketches\ArduinoMqttClientSmoke` | `L2` -> `L4` | Compile-ready plain MQTT loopback smoke for `ArduinoMqttClient` over `CellularClient`; hardware runtime pending |
+| ArduinoHttpClient runtime smoke | `validation_sketches\ArduinoHttpClientRuntimeSmoke` | `L4` | `ArduinoHttpClient` GET smoke is hardware-observed through `GET_RESULT,0`, `STATUS_CODE,200`, non-empty body, and `PASS` |
+| ArduinoMqttClient runtime smoke | `validation_sketches\ArduinoMqttClientSmoke` | `L4` | `ArduinoMqttClient` plain MQTT loopback is hardware-observed through connect / subscribe / publish / RX / `PASS` on `broker.emqx.io:1883` |
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |

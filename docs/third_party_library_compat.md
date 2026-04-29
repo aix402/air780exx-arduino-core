@@ -37,9 +37,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_library_c
 | `adafruit_ssd1306_compile` | `Adafruit SSD1306` + `Adafruit GFX Library` + `Adafruit BusIO` | Compile-only | Exercises the Adafruit display dependency chain. The runner exports `ARDUINO=10819` and AIR780EPM architecture macros at target level so library source units see the Arduino 1.x path. |
 | `rtclib_compile` | `RTClib` + `Adafruit BusIO` | Compile-only | Exercises `DateTime`, `TimeSpan`, and common RTC wrapper types without touching hardware. |
 | `arduino_httpclient_compile` | `ArduinoHttpClient` | Compile-only | Exercises an HTTP wrapper on top of `CellularClient`. |
-| `arduino_httpclient_runtime_smoke` | `ArduinoHttpClient` | Compile-plus-runtime-pending | Runtime target for `example.com:80` GET over `CellularClient`; should pass after board logs show HTTP status, non-empty body, and `+ARDUINO: ARDUINO_HTTPCLIENT,PASS`. |
+| `arduino_httpclient_runtime_smoke` | `ArduinoHttpClient` | Hardware-observed | Runtime-verified on AIR780EPM through `example.com:80` GET, `STATUS_CODE,200`, non-empty body, and `+ARDUINO: ARDUINO_HTTPCLIENT,PASS`. |
 | `arduino_mqttclient_compile` | `ArduinoMqttClient` | Compile-only | Exercises the official Arduino MQTT client wrapper on top of `CellularClient`. |
-| `arduino_mqttclient_runtime_smoke` | `ArduinoMqttClient` | Compile-plus-runtime-pending | Runtime target for plain MQTT publish/subscribe loopback on `broker.emqx.io:1883`; should pass after board logs show connect, subscribe, publish, RX, and `+ARDUINO: ARDUINO_MQTTCLIENT,PASS`. |
+| `arduino_mqttclient_runtime_smoke` | `ArduinoMqttClient` | Hardware-observed | Runtime-verified on AIR780EPM through plain MQTT loopback on `broker.emqx.io:1883`, including connect, subscribe, publish, RX, and `+ARDUINO: ARDUINO_MQTTCLIENT,PASS`. |
 | `sparkfun_scd4x_basic` | `SparkFun SCD4x Arduino Library` | Hardware-observed | Third-party I2C sensor example; previously observed CO2 data on AIR780EPM. |
 | `sht40_basic` | `SHT40` | Hardware-observed | Third-party I2C sensor example; previously observed temperature and humidity output. |
 | `sensirion_sht4x_example_usage` | `Sensirion I2C SHT4x` + `Sensirion Core` | Hardware-observed | Exercises a dependency chain on `Wire`. |
@@ -61,8 +61,8 @@ cases and the new ArduinoJson sketch:
 [library_compat] rtclib_compile                       PASS  compile-only
 [library_compat] arduino_httpclient_compile           PASS  compile-only
 [library_compat] arduino_mqttclient_compile           PASS  compile-only
-[library_compat] arduino_httpclient_runtime_smoke     PASS  compile-plus-runtime-pending
-[library_compat] arduino_mqttclient_runtime_smoke     PASS  compile-plus-runtime-pending
+[library_compat] arduino_httpclient_runtime_smoke     PASS  compile-plus-runtime-verified
+[library_compat] arduino_mqttclient_runtime_smoke     PASS  compile-plus-runtime-verified
 ```
 
 `ArduinoJsonRuntimeSmoke` was also flashed to AIR780EPM on `COM3`; binary log
@@ -70,13 +70,10 @@ capture at `921600` observed repeated
 `+ARDUINO: ARDUINOJSON_RUNTIME,PASS,LEN,62,...` lines.
 
 The newly added compile-only cases were validated through
-`scripts\validate_library_compat.ps1` on 2026-04-28. They are compile gates
-only; display, 1-Wire, RTC, HTTP, and ArduinoMqttClient runtime behavior still
-need separate hardware sketches before being marked hardware-observed.
-
-`ArduinoHttpClientRuntimeSmoke` and `ArduinoMqttClientSmoke` are ready for the
-next board session. They have compile-verified binaries, but no hardware log
-claim has been made yet.
+`scripts\validate_library_compat.ps1` on 2026-04-28. The dedicated
+`ArduinoHttpClientRuntimeSmoke` and `ArduinoMqttClientSmoke` sketches were then
+flashed to AIR780EPM on 2026-04-29, with binary logs decoded from `COM3` at
+`921600` through `luatos-cli log view-binary --probe`.
 
 ## Policy
 

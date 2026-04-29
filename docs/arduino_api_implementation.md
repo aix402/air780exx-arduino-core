@@ -72,8 +72,8 @@ mean the related hardware behavior has been observed on a board.
 | `AIR780EPMTLSClient` | Hardware-observed | `TlsHttpGet` was flashed and runtime-verified on AIR780EPM. The board reached `HTTP/1.1 200 OK` from `example.com:443` with `CellularClientSecure::setInsecure()`. Root cause for the earlier `-52` failure was not DNS, but `mbedtls_ctr_drbg_seed()` running under the EC718PM `mbedtls_ec7xx_config.h` profile where default entropy sources are disabled. The fix was to remove that unused DRBG seeding path and back the TLS RNG callback with `luat_crypto_trng()` directly. |
 | `CellularClientSecure::setCACert()` + `PubSubClient` | Hardware-observed | `MqttsPubSubClientCaSmoke` was flashed and runtime-verified on AIR780EPM. The board connected to `airtest.openluat.com:8888`, subscribed, published, received its loopback payload through the `PubSubClient` callback, and printed `+ARDUINO: MQTTS_PUBSUB_CA,PASS`. |
 | `CellularClient` + `MQTT by 256dpi` | Hardware-observed | `Mqtt256dpiSmoke` was flashed and runtime-verified on AIR780EPM with the third-party `MQTT` library by 256dpi. The board connected to the public plain MQTT broker `broker.emqx.io:1883`, subscribed, published, received its loopback payload through the 256dpi callback, and printed `+ARDUINO: MQTT_256DPI,PASS`. |
-| `CellularClient` + `ArduinoHttpClient` | Compile-enabled | `ArduinoHttpClientRuntimeSmoke` compiles and is ready for board validation. It will GET `example.com:80`, parse the status code through `ArduinoHttpClient`, read a non-empty body, and print `+ARDUINO: ARDUINO_HTTPCLIENT,PASS` on success. |
-| `CellularClient` + `ArduinoMqttClient` | Compile-enabled | `ArduinoMqttClientSmoke` compiles and is ready for board validation. It will connect to `broker.emqx.io:1883`, subscribe/publish on a per-device test topic, receive its loopback payload through `ArduinoMqttClient::onMessage()`, and print `+ARDUINO: ARDUINO_MQTTCLIENT,PASS` on success. |
+| `CellularClient` + `ArduinoHttpClient` | Hardware-observed | `ArduinoHttpClientRuntimeSmoke` was flashed and runtime-verified on AIR780EPM. The board reached `example.com:80`, observed `GET_RESULT,0`, `STATUS_CODE,200`, `SKIP_HEADERS,0`, a non-empty body through `responseBody()`, and `+ARDUINO: ARDUINO_HTTPCLIENT,PASS`. |
+| `CellularClient` + `ArduinoMqttClient` | Hardware-observed | `ArduinoMqttClientSmoke` was flashed and runtime-verified on AIR780EPM. The board connected to `broker.emqx.io:1883`, subscribed, published, received its loopback payload through `ArduinoMqttClient::onMessage()`, and printed `+ARDUINO: ARDUINO_MQTTCLIENT,PASS`. |
 | `AIR780EPMUDP` | Hardware-observed | `UdpNtpReport` was flashed and runtime-verified on AIR780EPM. The board received a 48-byte NTP packet from `pool.ntp.org` and reported a valid epoch. |
 | `configTime()` / `configTzTime()` / `getLocalTime()` | Hardware-observed | First Arduino-compatible time helpers are now present. `configTime()` stores fixed-offset NTP config, `configTzTime()` currently supports fixed-offset POSIX TZ strings such as `CST-8`, and `getLocalTime()` first accepts an already-valid system time / NITZ result, then falls back to the core's built-in UDP NTP request path if needed. |
 | `WiFiClient`, `WiFiClientSecure`, `WiFiUdp` aliases | Compile-enabled | Compatibility aliases only; they map to cellular-backed AIR780EPM client classes, not real Wi-Fi hardware. |
@@ -87,8 +87,8 @@ mean the related hardware behavior has been observed on a board.
 | `validation_sketches\MqttsPubSubClientCaSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the third-party `PubSubClient` library. |
 | `validation_sketches\Mqtt256dpiSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the third-party `MQTT` library by 256dpi against `broker.emqx.io:1883`. |
 | `validation_sketches\NTPClientReport` | Hardware-observed | Third-party `NTPClient` over the `WiFiUDP` alias is hardware-observed through network readiness, NTP update, valid epoch, `TIME_SET,1`, and `PASS`. |
-| `validation_sketches\ArduinoHttpClientRuntimeSmoke` | Compile-enabled | Ready for the next connected-board run. Runtime pass condition is `+ARDUINO: ARDUINO_HTTPCLIENT,PASS`. |
-| `validation_sketches\ArduinoMqttClientSmoke` | Compile-enabled | Ready for the next connected-board run. Runtime pass condition is `+ARDUINO: ARDUINO_MQTTCLIENT,PASS`. |
+| `validation_sketches\ArduinoHttpClientRuntimeSmoke` | Hardware-observed | Runtime logs now show `GET_RESULT,0`, `STATUS_CODE,200`, `SKIP_HEADERS,0`, `BODY_BYTES,1`, and `PASS` on AIR780EPM. |
+| `validation_sketches\ArduinoMqttClientSmoke` | Hardware-observed | Runtime logs now show `CONNECT,1`, `SUBSCRIBE,1`, `PUBLISH,1`, an `RX` callback with the loopback payload, and `PASS` using the official `ArduinoMqttClient` library against `broker.emqx.io:1883`. |
 
 ## NVM And File System
 
@@ -130,7 +130,7 @@ mean the related hardware behavior has been observed on a board.
 | Source libraries | Hardware-observed | SparkFun SCD4x `Example1_BasicReadings` compiles and reports CO2 data on AIR780EPM over `Wire`/I2C0. |
 | Compatibility matrix script | Compile-verified | `scripts\validate_library_compat.ps1` runs selected third-party probes and reports missing local libraries as `SKIP`. |
 | ArduinoJson runtime smoke | Hardware-observed | `validation_sketches\ArduinoJsonRuntimeSmoke` compiles with local ArduinoJson `7.4.3`; board logs on `COM3` at `921600` show repeated `+ARDUINO: ARDUINOJSON_RUNTIME,PASS,LEN,62,...`. |
-| 1-Wire / display / RTC / network wrapper compile probes | Compile-verified | `OneWire`, `DallasTemperature`, `U8g2`, `Adafruit SSD1306`, `RTClib`, `ArduinoHttpClient`, and `ArduinoMqttClient` now pass compile-only compatibility cases through the bridge. |
+| 1-Wire / display / RTC / network wrapper compile probes | Compile-verified | `OneWire`, `DallasTemperature`, `U8g2`, `Adafruit SSD1306`, `RTClib`, `ArduinoHttpClient`, and `ArduinoMqttClient` all pass compile-time compatibility cases through the bridge. Separate runtime sketches now cover the HTTP and MQTT wrappers on hardware. |
 
 ## Current Compile Checks
 
@@ -212,9 +212,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -
 - `Servo` is compile-enabled on top of PWM, but no AIR780EPM servo pulse output
   has been hardware-observed yet.
 - TCP, TLS, UDP, first-pass network time helpers, PubSubClient-backed CA MQTTS,
-  and MQTT by 256dpi over plain TCP are now hardware-observed. Other MQTT
-  libraries still need their own runtime validation. `ArduinoHttpClient` and
-  `ArduinoMqttClient` runtime smokes are compile-ready but not hardware-observed.
+  MQTT by 256dpi over plain TCP, `ArduinoHttpClient`, and
+  `ArduinoMqttClient` are now hardware-observed. Other MQTT libraries still
+  need their own runtime validation.
 - `configTzTime()` is intentionally first-pass only. Fixed-offset POSIX TZ
   strings are supported; full DST rule parsing is not.
 - Fresh-boot `luatos-cli log view-binary --probe` capture can miss one-shot
