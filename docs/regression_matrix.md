@@ -55,6 +55,12 @@ current xmake-native Arduino bridge.
 | Network time report | `examples\08.Network\NetworkTimeReport` | `L4` | Hardware runtime now reaches a valid epoch plus formatted local time through `configTime()` / `getLocalTime()` |
 | EEPROM / Preferences report | `examples\09.NVM\EepromPreferencesReport` | `L4` -> `L5` | Reflash-persistent counter and key-value smoke is hardware-observed; pure reset / power-cycle still pending |
 | LittleFS report | `examples\10.FileSystem\LittleFSReport` | `L4` | File create / read / rename / list / cleanup smoke is hardware-observed |
+| OTA API report | `examples\11.OTA\OtaApiReport` | `L4` | Hardware-observed baseline on 2026-04-29: `READY`, `STATE,IDLE`, and `SKIP,NO_URL`; default sketch does not auto-upgrade |
+| OTA failure validation | `validation_sketches\OtaFailureValidation` | `L4` | Hardware-observed failure-path matrix on 2026-04-29: local guards, running guards, invalid-host download failure, and non-OTA verify failure |
+| Sleep report | `examples\12.Sleep\SleepReport` | `L4` | Boot report plus `lightSleep()` return path are hardware-observed |
+| Sleep timer wake validation | `validation_sketches\SleepTimerWakeValidation` | `L5` | Real `SLP2` timer wake is hardware-observed; logs show `WAKE_REASON=RTC`, `LAST_STATE=SLEEP2`, valid sleep duration, and `PASS` after wake |
+| Sleep wakeup0 validation | `validation_sketches\SleepWakeup0Validation` | `L5` | Real `SLP2` external pad wake is hardware-observed on `WAKEUP0`; logs show `REASON=PAD` and `PASS` after shorting `WAKEUP0` to `GND` |
+| Sleep pad wake validation | `validation_sketches\SleepPadWakeValidation` | `L5` | USB/VBUS `WAKEUP_PAD_1` wake is hardware-observed on battery-backed AIR780EPM; logs show `RESULT,PAD` and `PASS` after USB replug |
 
 ## Current Automation Contract
 
@@ -103,6 +109,8 @@ Initial automation scope:
 - `examples\08.Network\UdpNtpReport`
 - `validation_sketches\NTPClientReport`
 - `examples\08.Network\NetworkTimeReport`
+- `examples\11.OTA\OtaApiReport`
+- `validation_sketches\OtaFailureValidation`
 
 ### `storage`
 
@@ -142,6 +150,11 @@ Initial automation scope:
   available.
 - Any change to `EEPROM`, `Preferences`, `FS`, `LittleFS`, or the AIR780EPM
   runner storage adapter must rerun `storage`.
+- Any change to `AIR780EPMSleep`, PM glue, or wake-pad mapping assumptions
+  should at least rerun compile on `examples\12.Sleep\SleepReport`,
+  `validation_sketches\SleepWakeup0Validation`, and
+  `validation_sketches\SleepPadWakeValidation`, then do timer wake / pad wake
+  hardware reruns when the board is connected.
 - Any change to Arduino library staging or target-level compatibility macros
   must rerun the focused `library_compat` cases affected by that bridge change.
 - Any linker, runner, or upload-script change must rerun `Blink` upload/log

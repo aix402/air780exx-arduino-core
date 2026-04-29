@@ -28,13 +28,13 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | `Serial` | USB/log output path | Does not emulate ESP32 UART0 semantics |
 | `analogRead()` / `analogReadMilliVolts()` | Compile-enabled on logical `A0..A3` | No GPIO-number analog mapping, no public range/attenuation API yet |
 | `analogWriteFrequency()` | Board-specific helper | Not an ESP32 `ledc*` API clone |
+| AIR780EPM URL OTA facade | Hardware-observed, failure-first only | A board-specific `AIR780EPMOTA` state machine now exists, but it is not ESP32 `Update.h`. On 2026-04-29 the no-URL baseline plus failure-path runtime were verified on AIR780EPM; real `.sota` stage/apply is still pending |
+| AIR780EPM sleep facade | Compile-enabled only | `AIR780EPMSleep` now exists, but it is a board-specific primitive modeled after the ML307NEC Arduino surface, not ESP32 `esp_sleep_*`. Wake pads are PMU IDs, and `deepSleep()` means EC718PM `SLP2` |
 
 ## Not Yet Implemented
 
 | Area | Notes |
 | --- | --- |
-| Sleep | no Arduino sleep/wakeup API yet |
-| OTA | no `Update` or URL OTA contract yet |
 | Interrupt helpers | `attachInterrupt()` family not implemented yet |
 | SD / SPIFFS aliases | not implemented and not yet promised |
 | Touch / DAC / LEDC extras | not implemented and not yet promised |
@@ -45,6 +45,7 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | --- | --- |
 | Real Wi-Fi stack | AIR780EPM is a cellular module; future compatibility aliases must document that clearly |
 | Full ESP-IDF feature parity | Out of scope |
+| ESP32 `Update.h` OTA contract | Not a first-pass target; AIR780EPM OTA will start with a narrower URL/diff OTA facade |
 | Full Arduino builder parity | The current bridge stages source libraries but does not implement every Arduino builder rule |
 | GPIO-number plus board-remap magic | The current contract keeps digital pins as GPIO numbers and avoids silent route changes |
 
@@ -66,3 +67,4 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | Wi-Fi network objects | cellular-backed compatibility aliases when a library only needs `Client` / `UDP` contracts |
 | Custom `Wire`/`SPI` remap | current default CSDK routes only |
 | ADC by GPIO number | use logical `A0..A3`; GPIO-number analog mapping is not promised yet |
+| ESP32 `esp_sleep_*` | `AIR780EPMSleep` for board-specific sleep primitives; wake pads are PMU IDs, not Arduino GPIOs |

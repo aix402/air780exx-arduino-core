@@ -2,7 +2,9 @@
 
 This document records API status by verification level. Compile-enabled means
 the API builds through the Arduino CLI bridge and xmake runner; it does not
-mean the related hardware behavior has been observed on a board.
+mean the related hardware behavior has been observed on a board. Planned means
+the Arduino-facing contract is drafted in this repo but the code has not landed
+yet.
 
 ## P0 Core Compatibility
 
@@ -101,6 +103,25 @@ mean the related hardware behavior has been observed on a board.
 | `examples\09.NVM\EepromPreferencesReport` | Hardware-observed | Runtime logs confirmed write/commit and persisted counters across reflashing. Pure reset-only or power-cycle-only validation can still be added later. |
 | `examples\10.FileSystem\LittleFSReport` | Hardware-observed | Runtime logs confirmed `MKDIR/OPEN_WRITE/EXISTS/RENAME/OPEN_READ/OPEN_ROOT/REMOVE/RMDIR` all returned `OK`, with payload `air780epm-littlefs`. |
 
+## OTA
+
+| API | Status | Notes |
+| --- | --- | --- |
+| `AIR780EPMOTA` URL OTA facade | Hardware-observed, failure-first | First AIR780EPM OTA target is diff OTA, not full-image OTA. The current runner implementation uses LuatOS HTTP client + `luat_fota_init/write/done/end` glue behind a new Arduino-facing OTA facade. On 2026-04-29, `examples\11.OTA\OtaApiReport` was flashed to AIR780EPM on `COM3` and runtime logs at `921600` showed `READY`, `INITIAL,STATE,IDLE,ERR,0`, and `SKIP,NO_URL`, confirming the default sketch does not auto-upgrade. |
+| `begin()/poll()/state()/isRunning()/isStaged()/downloadedBytes()/totalBytes()/lastError()/apply()/clear()` | Hardware-observed, failure-first | On 2026-04-29, `validation_sketches\OtaFailureValidation` was flashed and log-verified on AIR780EPM. Hardware logs showed `EMPTY_URL/BAD_SCHEME/AUTH_MISMATCH -> -1`, `NO_NETWORK_GUARD -> -3`, `BEGIN_AGAIN/CLEAR_WHILE_RUNNING -> -2`, invalid-host download failure `-> -4`, and reachable non-OTA content verify failure `-> -5`. `clear()` remains intentionally narrow in v1: it only resets local session/error state in `IDLE` or `ERROR`; clearing an already staged package is not implemented. |
+
+## Sleep
+
+| API | Status | Notes |
+| --- | --- | --- |
+| `AIR780EPMSleep.lightSleep()` / `deepSleep()` | Hardware-observed for timer deep sleep wake | First AIR780EPM sleep primitive now mirrors the ML307NEC Arduino API shape, but keeps AIR780EPM semantics explicit: `deepSleep()` is `SLP2`, not standby/hibernate. Current backend drives `CFUN=0` settle, `SLP2` selection, deep-sleep timer arming, and `luat_pm_force(LUAT_PM_SLEEP_MODE_DEEP)`. Board logs now show real `SLP2` entry plus RTC/timer wake on AIR780EPM. |
+| `setWakeupPad()` / `clearWakeupPad()` | Hardware-observed on `WAKEUP_PAD_0` and `WAKEUP_PAD_1` | Wakeup pad IDs are PMU wake pad indices `WAKEUP_PAD_0..5`, not Arduino GPIO numbers. No GPIO-to-wakeup-pad remap is promised in v1. On 2026-04-29, the root cause for earlier pad-wake failures was fixed by making `AIR780EPMSleep.setWakeupPad()` reuse the LuatOS wakeup GPIO initialization path instead of only writing `slpman` pad settings. `WAKEUP_PAD_0` now wakes `SLP2` on falling edge, and AIR780EPM USB/VBUS wake source `WAKEUP_PAD_1` now also wakes successfully on hardware. |
+| `wakeupReason()` / `lastSleepState()` / `sleepTimeMillis()` / `wakeupPinBitmap()` | Hardware-observed for deep-sleep wake query path | Query path is backed by EC718PM `slpman` wake source, last sleep state, sleep time, and wake pad bitmap helpers. After timer wake, runtime logs report `WAKE_REASON=RTC`, `LAST_STATE=SLEEP2`, and `LAST_MS` near the armed interval. |
+| `examples\12.Sleep\SleepReport` | Hardware-observed | Arduino-facing sleep API report sketch. Current default behavior exercises boot report plus `lightSleep()` and prints `PASS` on hardware without auto-arming deep sleep. |
+| `validation_sketches\SleepTimerWakeValidation` | Hardware-observed | Deep-sleep timer validation sketch. On 2026-04-29 AIR780EPM hardware logs showed `Wakup Sleep2 by RTC`, `WAKE_REASON=RTC`, `LAST_STATE=SLEEP2`, valid `WAKE_TIMER_ID=2`, and repeated `+ARDUINO: SLEEP_TIMER,PASS` after wake. |
+| `validation_sketches\SleepWakeup0Validation` | Hardware-observed | Dedicated `WAKEUP_PAD_0` validation sketch. On 2026-04-29 AIR780EPM hardware logs showed `LAST_STATE=SLEEP2`, `REASON=PAD`, and repeated `+ARDUINO: SLEEP_WAKEUP0,PASS` after shorting `WAKEUP0` to `GND`. |
+| `validation_sketches\SleepPadWakeValidation` | Hardware-observed | USB VBUS-related wake pad validation sketch. On 2026-04-29 AIR780EPM hardware logs showed `RESULT,PAD` and `+ARDUINO: SLEEP_PAD,PASS` after USB/VBUS replug while the board stayed alive on battery, confirming `WAKEUP_PAD_1` wake on hardware. |
+
 ## Display Bring-Up
 
 | Capability | Status | Notes |
@@ -168,6 +189,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\08.Network\NetworkTimeReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\09.NVM\EepromPreferencesReport
 powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -SketchPath .\examples\10.FileSystem\LittleFSReport
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\11.OTA\OtaApiReport -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\OtaFailureValidation -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\12.Sleep\SleepReport -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\SleepPadWakeValidation -Clean
+powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\SleepWakeup0Validation -Clean
 powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\ArduinoJsonRuntimeSmoke -Clean
 powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduinojson_runtime_smoke,ntpclient_report,pubsubclient_mqtts_ca_smoke,mqttclient_256dpi_smoke" -Clean -ContinueOnError
 powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "onewire_basic_compile,dallas_temperature_compile,u8g2_ssd1306_compile,adafruit_ssd1306_compile,rtclib_compile,arduino_httpclient_compile,arduino_mqttclient_compile" -Clean -ContinueOnError
@@ -222,3 +248,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -
   also inspect follow-on loop summaries or later no-probe captures.
 - `EEPROM` / `Preferences` persistence has been observed across reflashing, but
   pure reset-only and power-cycle-only validation is still pending.
+- OTA failure-first runtime validation is hardware-observed now. What still
+  remains out of scope for now is the real `.sota` package path: download,
+  stage, `apply()`, reboot, post-reboot version confirmation, and staged-package
+  cleanup semantics.
+- `lightSleep()` timing accuracy is still not measured.
+- `WAKEUP_PAD_0` and `WAKEUP_PAD_1` are hardware-observed now. Other wake pads
+  still need their own board-level validation before they should be documented
+  as stable Arduino-facing contracts.

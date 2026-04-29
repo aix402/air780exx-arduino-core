@@ -63,6 +63,18 @@ Current AIR780EPM Arduino runner layout:
 | LittleFS region | `0x3b7000..0x3e1000` / 168 KiB | Kept unchanged |
 | FDB/KV region | `0x3e1000..0x3f1000` / 64 KiB | Kept unchanged |
 
+## OTA Budget Implication
+
+As of 2026-04-29, the validated AIR780EPM Arduino runner is already in the
+roughly `1.35 MiB` AP-image class once networking, TLS, storage, and validation
+support are linked in. With only about `352 KiB` of usable in-flash FOTA
+staging space, full-image OTA is not a sensible first target for this core.
+
+The practical first OTA target is diff OTA. The upgrade artifact should be a
+`.sota` package generated from an old `.soc` plus a new `.soc`; `.binpkg`
+remains the flash/download artifact for normal runner uploads, not the diff-OTA
+package input.
+
 Removing the runner `mem_map_7xx.h` is not the preferred way to use the default
 layout. It would let SDK feature macros choose the defaults, making Arduino
 package builds less reproducible.

@@ -26,7 +26,7 @@
 | `L5` | persistence-or-sleep-verified | 断电、复位、深睡、网络等待等跨状态验证通过 | 状态保持 / 低功耗路径已实测 |
 | `L6` | packaged-release-verified | Boards Manager / IDE / 发布门禁通过 | 可交付给普通 Arduino 用户 |
 
-## AIR780EPM 当前进度快照（2026-04-28）
+## AIR780EPM 当前进度快照（2026-04-29）
 
 | 面向能力 | 当前等级 | 说明 |
 | --- | --- | --- |
@@ -36,6 +36,7 @@
 | GPIO / `Wire` / PWM / ADC / `Serial1` | `L4` | 已有真实板级验证样例 |
 | `Wire1` / `SPI` / `SPI1` / `Serial2` / `Serial3` | `L2` | 先保持 compile-enabled，等硬件接线再补 runtime |
 | `Servo` | `L2` | 已接到 PWM 层并补示例，待板级验证 |
+| Sleep API | `L5` | `SleepReport` 已实机跑通，`SleepTimerWakeValidation` 已实机证明 `SLP2 -> RTC/timer wake`；`SleepWakeup0Validation` 已实机证明 `WAKEUP0 -> PAD wake`；`SleepPadWakeValidation` 已实机证明 `WAKEUP_PAD_1/USB VBUS -> PAD wake`。`deepSleep()` 语义固定为 `SLP2`，wakeup pad 仍按 PMU pad ID 暴露，不等于 Arduino GPIO |
 | Network status / PDP / IPv4 | `L4` | `NetworkStatusReport` 已实机验证，能看到 `REGISTERED=1`、`READY=1`、`HAS_IPV4=1` 和真实 IPv4 地址 |
 | Modem identity / signal / cell 详细信息 | `L4` | `Modem.getIdentity()` 已修复；`ModemInfoReport` 现已实机跑通到运行态摘要，看到 `WAIT_OK=1`、`REGISTERED=1`、`NET_READY=1`、`HAS_IPV4=1` 和真实 IPv4，说明 `waitForNetwork()` / 后续状态路径已收口 |
 | TCP / TLS / UDP smoke | `L4` | `TcpHttpGet`、`TlsHttpGet`、`UdpNtpReport` 已实机跑通；TLS 的 `-52` 根因已定位为 EC718PM mbedTLS 配置下不应再调用无效的 `ctr_drbg_seed()`，当前已改为直接走 `luat_crypto_trng()` |
@@ -47,9 +48,10 @@
 当前建议推进顺序：
 
 1. `Servo` 板级收口。
-2. 把已跑通的 CA / MQTTS 路径纳入 connectivity 回归。
-3. 视需要再补 `EEPROM` / `Preferences` 的纯 reset / 断电验证。
-4. 继续补 `Wire1` / `SPI` / `SPI1` / `Serial2` / `Serial3` 的板级验证。
+2. Sleep 文档和回归矩阵收口。
+3. 把已跑通的 CA / MQTTS 路径纳入 connectivity 回归。
+4. 视需要再补 `EEPROM` / `Preferences` 的纯 reset / 断电验证。
+5. 继续补 `Wire1` / `SPI` / `SPI1` / `Serial2` / `Serial3` 的板级验证。
 
 ## 阶段 0：准备和边界固定
 
@@ -416,53 +418,86 @@ Pad wake 人工验证建议：
 进入下一阶段条件：
 
 - 能证明设备真实进入深睡，而不是只进入普通等待。
-- timer wake 和至少一个 pad wake 都有实机证据。
+- timer wake、`WAKEUP0` pad wake、`WAKEUP_PAD_1`/USB VBUS wake 都有实机证据。
 - 文档明确 wakeup pad 与普通 GPIO 的区别。
 
 ## 阶段 10：OTA
 
 目标：
 
+- AIR780EPM 第一轮只做 URL 型 diff OTA，不做 full OTA。
 - Core 提供 URL 型 OTA API。
 - 第一轮不做完整 `Update.h` stream-to-partition 兼容。
 - 先验证状态机和失败路径，再制作真实升级包做真机升级。
+
+AIR780EPM 当前约束：
+
+- 当前 runner flash 布局里 FOTA 窗口是 `448 KiB`，扣除 hib backup 后可用约 `352 KiB`。
+- 当前 AP 镜像已经在 `1.35 MiB` 量级，full OTA 不是当前合理首目标。
+- 差分升级包应由旧版 `.soc` 和新版 `.soc` 生成 `.sota`，不是直接拿 `.binpkg` 做升级包。
+
+后端选择：
+
+- Arduino 层可以参考 ML307N-EC 的 API 形状和 failure validation 组织方式。
+- AIR780EPM 后端不复用 ML307N-EC 的 `mhttpFwdlReq` / `mhttpFwdlApplyNow` 一类 SDK 私有接口。
+- AIR780EPM OTA 统一复用 LuatOS `luat_fota_init/write/done/end` 和 HTTP client 下载路径。
 
 API 模型建议：
 
 | API | 语义 |
 | --- | --- |
-| `begin(url, config)` | 启动 URL OTA 下载 |
+| `begin(url, config)` | 启动 URL OTA 下载；v1 先服务于 diff `.sota` 包 |
 | `poll()` | 推进 / 查询状态 |
 | `state()` | 返回 `IDLE/STARTING/DOWNLOADING/VERIFYING/STAGED/APPLYING/ERROR` |
 | `isRunning()` | 是否正在下载 / 校验 |
 | `isStaged()` | 是否已有待应用升级包 |
-| `lastError()` | 最近错误 |
+| `downloadedBytes()` | 已下载字节数 |
+| `totalBytes()` | 服务端声明的总字节数 |
+| `lastError()` | 最近错误，先收敛为 Arduino 层错误码 |
 | `apply()` | staged 后请求应用并重启 |
-| `clear()` | 清理 staged / failed 状态 |
+| `clear()` | 先只清理当前会话 / 错误状态；v1 不承诺清除已 staged 包 |
+
+错误模型建议：
+
+- 优先提供稳定的 Arduino 层错误码，如 `NONE`、`INVALID_ARGUMENT`、`INVALID_STATE`、`NETWORK_NOT_READY`、`DOWNLOAD_FAILED`、`VERIFY_FAILED`、`HTTP_STATUS_ERROR`、`INTERNAL`。
+- 如果后续确实需要暴露 SDK 原始错误，再补可选的 `lastPlatformError()`，不要在 v1 就把平台细节直接泄露给草图。
 
 验证顺序：
 
 | 阶段 | 验证 |
 | --- | --- |
 | compile | `OtaApiReport` 编译通过 |
-| no-url guard | 示例默认空 URL 输出 `SKIP,NO_URL` |
-| local guard | 空 URL、非法 URL、认证参数不成对立即拒绝 |
+| no-url guard | 示例默认空 URL 输出 `SKIP,NO_URL`，不自动升级 |
+| local guard | 空 URL、非法 URL、认证参数不成对、网络未就绪立即拒绝 |
 | running guard | 运行中二次 `begin()` / `clear()` 被拒绝 |
-| async error | 假 `.invalid` URL 最终进入 `ERROR` |
-| real package | 制作升级包，HTTP/HTTPS 下载、校验、stage、apply、重启 |
+| async error | 假 `.invalid` URL 或连接失败最终进入 `ERROR` |
+| verify error | 可连通但返回非 OTA 内容，能区分 `DOWNLOAD_FAILED` 和 `VERIFY_FAILED` |
+| real package | 制作 `.sota` 包，完成 HTTP/HTTPS 下载、校验、stage、apply、重启 |
 
-本仓库命令样例：
+当前状态（2026-04-29）：
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\build_core.ps1 -Sketch ota_api_report -BuildTarget arduino_runner
-powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\validation_sketches\OtaFailureValidation\OtaFailureValidation.ino -Clean
-```
+- `AIR780EPMSleep`、`examples\12.Sleep\SleepReport`、`validation_sketches\SleepPadWakeValidation` 已通过 Arduino CLI compile。
+- 当前 `deepSleep()` 固定映射到 EC718PM `SLP2`，不把 standby/hibernate 混进 Arduino 的 `deepSleep()` 语义。
+- `WakeupPad` 继续按 PMU wake pad ID 暴露，v1 不做 Arduino GPIO 自动映射。
+- `SleepTimerWakeValidation` 已在 AIR780EPM `COM3` 上实机命中 `Wakup Sleep2 by RTC`、`WAKE_REASON=RTC`、`LAST_STATE=SLEEP2`、有效 `LAST_MS`、`WAKE_TIMER_ID=2` 与 `+ARDUINO: SLEEP_TIMER,PASS`，说明 timer wake 已收口。
+- `SleepWakeup0Validation` 已在 AIR780EPM `COM3` 上实机命中 `REASON=PAD` 与 `+ARDUINO: SLEEP_WAKEUP0,PASS`，说明 `WAKEUP0` pad wake 已收口。
+- `SleepPadWakeValidation` 已在 AIR780EPM `COM3` 上实机命中 `RESULT,PAD` 与 `+ARDUINO: SLEEP_PAD,PASS`，说明 `WAKEUP_PAD_1`/USB VBUS wake 已收口。
+- 本轮 root cause 已定位并修复：之前 `AIR780EPMSleep.setWakeupPad()` 只写了 `slpman` pad 配置，没有走 LuatOS 官方 wakeup GPIO 初始化路径，所以 `WAKEUP0/1` 在 Arduino 层不会真正变成可唤醒源。修复后 `setWakeupPad()/clearWakeupPad()` 已改为复用 LuatOS wakeup GPIO 初始化/关闭路径。
+- `OtaApiReport` 已在 AIR780EPM `COM3` 上实机验证，日志命中 `READY`、`INITIAL,STATE,IDLE,ERR,0`、`SKIP,NO_URL`。
+- `OtaFailureValidation` 已在 AIR780EPM `COM3` 上实机验证，错误矩阵命中 `INVALID_ARGUMENT=-1`、`INVALID_STATE=-2`、`NETWORK_NOT_READY=-3`、`DOWNLOAD_FAILED=-4`、`VERIFY_FAILED=-5`。
+- 仍未进入真实 `.sota` 包阶段；`apply()` / 重启后版本确认还没有实机覆盖。
+
+示例拆分建议：
+
+- `OtaApiReport`：默认无 URL，只报告状态和能力，不自动升级。
+- `OtaFailureValidation`：专门覆盖 guard、并发、下载失败、校验失败。
+- 真正的 diff OTA runtime smoke 放到真实 `.sota` 制作流程明确之后再加。
 
 进入下一阶段条件：
 
 - API 状态机和失败路径 compile + runtime 通过。
 - 示例默认不自动升级，必须显式配置 URL。
-- 真 OTA 只有在升级包制作、版本识别、服务器 URL、回滚策略都明确后才进入 release 承诺。
+- `.sota` 制作流程、版本识别、服务器 URL、apply/reboot 语义明确后，才进入真 OTA release 承诺。
 
 ## 阶段 11：打包、安装、发布门禁
 
