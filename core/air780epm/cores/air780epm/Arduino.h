@@ -198,6 +198,8 @@ void analogWriteResolution(int bits);
 #include "EEPROM.h"
 #include "Preferences.h"
 #include "Servo.h"
+#include "AIR780EPMSleep.h"
+#include "AIR780EPMOTA.h"
 
 template <typename T, typename U>
 inline auto min(T a, U b) -> decltype((a < b) ? a : b) {
