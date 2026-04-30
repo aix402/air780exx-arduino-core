@@ -147,7 +147,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\check_static_ctors_map.ps1
 Set up the local platform mount:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_setup.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_setup.ps1
 ```
 
 This creates the local FQBN:
@@ -156,15 +156,46 @@ This creates the local FQBN:
 openluat:ec718pm:air780epm_dev
 ```
 
-The setup script reuses the system Arduino data directory when available, for
-example `C:\Users\cu80u\AppData\Local\Arduino15`, so Arduino CLI does not need
-to re-download the official library index.
+The default setup uses the project-local Arduino CLI executable and
+project-local data/cache directories:
+
+- `tools\arduino-cli-release\arduino-cli.exe`
+- `.arduino-cli-config\arduino-cli.yaml`
+- `.arduino-cli-data`
+- `.arduino-cli-downloads`
+
+This avoids competing with Arduino IDE or another worktree for the shared
+Arduino15 package state.
+
+The current release candidate uses the CSDK prebuilt static-library flow:
+Arduino CLI compiles sketches, the Arduino core, and third-party libraries, then
+the combine step links those outputs with `libcsdk.a` and
+`libair780epm_runner.a`. Ordinary users of a generated distribution package do
+not need XMake. Maintainers only need XMake plus the CSDK/LuatOS trees when
+refreshing the prebuilt `.a` artifacts or rebuilding the distribution package.
+
+Detailed build flow:
+
+- [CSDK prebuilt build flow](docs/csdk_prebuilt_build_flow.md)
+- [CSDK prebuilt feasibility notes](docs/csdk_prebuilt_a_research.md)
+
+Phase-1 software acceptance:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1
+```
+
+Distribution package acceptance:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1 -IncludeDistribution
+```
 
 Compile and upload the Blink sketch:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\01.Basics\Blink -Clean
-powershell -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 -SketchPath .\examples\01.Basics\Blink -ComPort COM3
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\01.Basics\Blink -Clean
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 -SketchPath .\examples\01.Basics\Blink -ComPort COM3
 ```
 
 Compile the serial API compatibility sketch:
