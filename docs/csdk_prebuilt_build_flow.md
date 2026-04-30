@@ -335,6 +335,21 @@ Distribution acceptance:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1 -IncludeDistribution
 ```
 
+Package the verified distribution for release:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
+```
+
+The package script writes three release artifacts under `dist\releases`:
+
+- `csdk-prebuilt-air780epm-<version>.zip`
+- `csdk-prebuilt-air780epm-<version>.zip.sha256`
+- `csdk-prebuilt-air780epm-<version>.manifest.json`
+
+By default `<version>` is derived from the current Git branch and short commit.
+Pass `-Version <name>` when cutting a named release.
+
 Distribution hardware acceptance:
 
 ```powershell

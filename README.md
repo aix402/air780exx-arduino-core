@@ -191,6 +191,15 @@ Distribution package acceptance:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1 -IncludeDistribution
 ```
 
+Create a release archive from the verified distribution package:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
+```
+
+This writes the `.zip`, `.zip.sha256`, and `.manifest.json` files under
+`dist\releases`.
+
 Compile and upload the Blink sketch:
 
 ```powershell
