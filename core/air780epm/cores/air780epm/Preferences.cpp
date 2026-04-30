@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 extern "C" {
-#include "osanvm.h"
+#include "arduino_nvm_io.h"
 }
 
 namespace {
@@ -337,7 +337,8 @@ size_t Preferences::getString(const char *key, char *value, size_t maxLen) const
 
 bool Preferences::load(void)
 {
-    OsaNvmBodyInfo bodyInfo = {0};
+    uint8_t *body = NULL;
+    size_t bodySize = 0U;
     uint8_t version = 0U;
     bool loaded = false;
 
@@ -355,19 +356,19 @@ bool Preferences::load(void)
         return false;
     }
 
-    if (OsaNvmRead(file_name_, &version, &bodyInfo, 0U) == OSA_NVM_SUCC)
+    if (arduinoCoreNvmRead(file_name_, &version, &body, &bodySize) == 0)
     {
-        if ((bodyInfo.bodySize >= sizeof(PreferencesHeader)) && (bodyInfo.bodySize <= capacity_))
+        if ((bodySize >= sizeof(PreferencesHeader)) && (bodySize <= capacity_))
         {
-            const PreferencesHeader *header = (const PreferencesHeader *)bodyInfo.pBuf;
-            if ((header->magic == kPrefsMagic) && (header->version == kPrefsVersion) && (header->used <= bodyInfo.bodySize))
+            const PreferencesHeader *header = (const PreferencesHeader *)body;
+            if ((header->magic == kPrefsMagic) && (header->version == kPrefsVersion) && (header->used <= bodySize))
             {
-                memcpy(buffer_, bodyInfo.pBuf, header->used);
+                memcpy(buffer_, body, header->used);
                 used_ = header->used;
                 loaded = true;
             }
         }
-        OsaNvmFreeBody(&bodyInfo);
+        free(body);
     }
 
     if (!loaded)
@@ -385,7 +386,7 @@ bool Preferences::writeBack(void)
         return false;
     }
 
-    return (OsaNvmWrite(file_name_, (UINT8)kPrefsVersion, buffer_, (UINT32)used_) == OSA_NVM_SUCC);
+    return (arduinoCoreNvmWrite(file_name_, (uint8_t)kPrefsVersion, buffer_, used_) == 0);
 }
 
 bool Preferences::resetBuffer(void)

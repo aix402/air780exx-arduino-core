@@ -5,7 +5,7 @@
 #include <string.h>
 
 extern "C" {
-#include "osanvm.h"
+#include "arduino_nvm_io.h"
 }
 
 namespace {
@@ -62,7 +62,8 @@ EEPROMClass::~EEPROMClass()
 
 bool EEPROMClass::begin(size_t size)
 {
-    OsaNvmBodyInfo bodyInfo = {0};
+    uint8_t *body = NULL;
+    size_t bodySize = 0U;
     uint8_t version = 0U;
 
     if ((size == 0U) || (size > kEepromMaxSize))
@@ -81,22 +82,22 @@ bool EEPROMClass::begin(size_t size)
     size_ = size;
     dirty_ = false;
 
-    if (OsaNvmRead(file_name_, &version, &bodyInfo, 0U) == OSA_NVM_SUCC)
+    if (arduinoCoreNvmRead(file_name_, &version, &body, &bodySize) == 0)
     {
-        if (bodyInfo.bodySize >= sizeof(EepromHeader))
+        if (bodySize >= sizeof(EepromHeader))
         {
-            const EepromHeader *header = (const EepromHeader *)bodyInfo.pBuf;
+            const EepromHeader *header = (const EepromHeader *)body;
             if ((header->magic == kEepromMagic) && (header->version == kEepromVersion))
             {
                 size_t storedSize = header->size;
                 size_t copySize = (storedSize < size_) ? storedSize : size_;
-                if ((sizeof(EepromHeader) + copySize) <= bodyInfo.bodySize)
+                if ((sizeof(EepromHeader) + copySize) <= bodySize)
                 {
-                    memcpy(data_, bodyInfo.pBuf + sizeof(EepromHeader), copySize);
+                    memcpy(data_, body + sizeof(EepromHeader), copySize);
                 }
             }
         }
-        OsaNvmFreeBody(&bodyInfo);
+        free(body);
     }
 
     return true;
@@ -123,7 +124,7 @@ bool EEPROMClass::commit(void)
 
     memcpy(body, &header, sizeof(header));
     memcpy(body + sizeof(header), data_, size_);
-    ok = (OsaNvmWrite(file_name_, (UINT8)kEepromVersion, body, (UINT32)bodySize) == OSA_NVM_SUCC);
+    ok = (arduinoCoreNvmWrite(file_name_, (uint8_t)kEepromVersion, body, bodySize) == 0);
     free(body);
 
     if (ok)

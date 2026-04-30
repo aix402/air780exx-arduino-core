@@ -3,7 +3,7 @@
 #include <string.h>
 
 extern "C" {
-#include "common_api.h"
+#include "arduino_debug_io.h"
 #include "luat_uart.h"
 }
 
@@ -135,8 +135,7 @@ size_t HardwareSerial::write(const uint8_t *buffer, size_t size) {
         return 0;
     }
     if (isLogPort()) {
-        soc_debug_out(reinterpret_cast<const char *>(buffer), static_cast<uint32_t>(size));
-        return size;
+        return arduinoCoreDebugWrite(buffer, size);
     }
     if (!begun_) {
         return 0;

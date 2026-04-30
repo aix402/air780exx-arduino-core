@@ -1,7 +1,7 @@
 #include "Arduino.h"
 
 extern "C" {
-#include "common_api.h"
+#include "c_common.h"
 #include "luat_adc.h"
 #include "luat_pwm.h"
 }

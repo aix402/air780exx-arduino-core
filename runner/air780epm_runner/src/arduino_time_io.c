@@ -1,7 +1,11 @@
 #include "arduino_time_io.h"
 
+#include "common_api.h"
 #include "luat_rtc.h"
+#include "luat_rtos.h"
 #include "mw_aon_info.h"
+
+void delay_us(uint32_t us);
 
 int arduinoCoreTimeSetEpoch(uint32_t epochSeconds)
 {
@@ -28,4 +32,24 @@ int arduinoCoreTimeGetTimezoneQuarterHours(int8_t *outTimezoneQuarterHours)
 
     *outTimezoneQuarterHours = (int8_t)timezone;
     return timezone;
+}
+
+void arduinoCoreDelayMs(uint32_t milliseconds)
+{
+    luat_rtos_task_sleep(milliseconds);
+}
+
+void arduinoCoreDelayUs(uint32_t microseconds)
+{
+    delay_us(microseconds);
+}
+
+uint64_t arduinoCoreMillis(void)
+{
+    return soc_get_poweron_time_ms();
+}
+
+void arduinoCoreYield(void)
+{
+    luat_rtos_task_sleep(1);
 }

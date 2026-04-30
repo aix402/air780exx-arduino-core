@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-#include "common_api.h"
 #include "luat_debug.h"
 #include "luat_gpio.h"
 #include "luat_lcd.h"
