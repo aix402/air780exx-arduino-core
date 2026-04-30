@@ -22,10 +22,14 @@ function Resolve-RepoPath {
 
 $packageFullPath = Resolve-RepoPath -Path $PackageFile
 $socFullPath = Resolve-RepoPath -Path $SocFile
-$cliCandidates = @(
-    (Join-Path $repoRoot $LuatOSCliPath),
-    (Join-Path $repoRoot $LuatOSCliSourcePath)
-)
+$cliCandidates = foreach ($candidate in @($LuatOSCliPath, $LuatOSCliSourcePath)) {
+    if ([System.IO.Path]::IsPathRooted($candidate)) {
+        $candidate
+    }
+    else {
+        Join-Path $repoRoot $candidate
+    }
+}
 $cliFullPath = $cliCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 
 if ($null -ne $cliFullPath) {
