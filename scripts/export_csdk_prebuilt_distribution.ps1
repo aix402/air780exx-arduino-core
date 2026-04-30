@@ -451,6 +451,7 @@ $distributionManifest["link"]["linker_script_template"] = $null
 $distributionManifest["link"]["linker_script_output"] = $generatedLinkerScript
 $distributionManifest["link"]["preprocessed_linker_script"] = $generatedLinkerScript
 $distributionManifest["package"]["mem_map"] = $generatedMemMap
+$distributionManifest["package"]["include_dirs"] = @()
 
 $distributionManifestPath = Join-Path $outputFullDirectory "arduino_export_manifest.json"
 $encoding = [System.Text.UTF8Encoding]::new($false)

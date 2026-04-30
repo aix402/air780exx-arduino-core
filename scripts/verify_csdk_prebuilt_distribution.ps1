@@ -124,6 +124,9 @@ Assert-TextContains `
     -Path ([string]$manifest.package.mem_map) `
     -Pattern "AP_FLASH_LOAD_ADDR" `
     -Description "Distribution preprocessed memory map"
+if (($manifest.package.PSObject.Properties.Name -contains "include_dirs") -and @($manifest.package.include_dirs).Count -gt 0) {
+    throw "Distribution manifest should not expose package include dirs after exporting preprocessed mem_map.txt"
+}
 if (Test-Path -LiteralPath (Join-Path $distributionRoot "abi\linker\air780epm_flash.arduino_ctor.c") -PathType Leaf) {
     throw "Distribution should not ship the intermediate linker template"
 }
