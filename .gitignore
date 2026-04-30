@@ -11,6 +11,7 @@ out/
 dist/
 logs/
 hardware/
+libraries/ArduinoJson/
 .tmp_*
 .tmp*/
 .xmake/

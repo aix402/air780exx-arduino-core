@@ -8,6 +8,8 @@ param(
     [switch]$DisableStaticConstructors,
     [string]$SketchPath,
     [string]$ArduinoBuildPath,
+    [switch]$UseArduinoCliObjects,
+    [switch]$PrebuildOnly,
     [switch]$Clean
 )
 
@@ -890,14 +892,43 @@ try {
         xmake clean -a
     }
 
-    xmake f --chip_target=$ChipTarget --lspd_mode=$LspdMode --denoise_force=$DenoiseForce --arduino_static_ctors=$staticConstructorsEnabled
+    $xmakeConfigArgs = @(
+        "f",
+        "--chip_target=$ChipTarget",
+        "--lspd_mode=$LspdMode",
+        "--denoise_force=$DenoiseForce",
+        "--arduino_static_ctors=$staticConstructorsEnabled"
+    )
+    if ($UseArduinoCliObjects) {
+        if ([string]::IsNullOrWhiteSpace($ArduinoBuildPath)) {
+            throw "-UseArduinoCliObjects requires -ArduinoBuildPath."
+        }
+        $xmakeConfigArgs += "--arduino_external_build=true"
+        $xmakeConfigArgs += "--arduino_build_path=$((Resolve-Path -LiteralPath $ArduinoBuildPath).Path)"
+    }
+    else {
+        $xmakeConfigArgs += "--arduino_external_build=false"
+        $xmakeConfigArgs += "--arduino_build_path="
+    }
+
+    xmake @xmakeConfigArgs
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
 
-    xmake
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
+    if ($PrebuildOnly) {
+        foreach ($targetName in @("csdk", "ap_bootloader.elf", "air780epm_runner")) {
+            xmake build $targetName
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
+        }
+    }
+    else {
+        xmake
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
     }
 
     Write-Output "Arduino static constructors: $staticConstructorsEnabled"

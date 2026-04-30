@@ -12,6 +12,20 @@ option("arduino_static_ctors", function()
 end)
 add_options("arduino_static_ctors")
 
+option("arduino_external_build", function()
+    set_default(false)
+    set_showmenu(true)
+    set_description("Link Arduino CLI-produced sketch/core objects instead of compiling them in xmake")
+end)
+add_options("arduino_external_build")
+
+option("arduino_build_path", function()
+    set_default("")
+    set_showmenu(true)
+    set_description("Arduino CLI build path containing sketch objects and core.a")
+end)
+add_options("arduino_build_path")
+
 add_includedirs(project_dir .. "/inc")
 add_cxflags("-include", "air780epm_luat_compat.h", {force = true})
 add_includedirs(luatos_root .. "/components/u8g2", {public = true})
@@ -62,8 +76,11 @@ target(project_name, function()
     add_files(luatos_root .. "/components/network/libhttp/luat_http_client_for_csdk.c", {public = true})
     remove_files(luatos_root .. "/components/lcd/luat_lib_*.c")
 
+    local external_arduino_build = get_config("arduino_external_build")
     local generated_sketch = path.join(project_dir, "generated", "arduino_sketch.cpp")
-    if os.isfile(generated_sketch) then
+    if external_arduino_build then
+        -- setup()/loop() and Arduino core are linked from Arduino CLI output in the final ELF target.
+    elseif os.isfile(generated_sketch) then
         add_files(generated_sketch, {public = true})
         for _, file in ipairs(os.files(path.join(project_dir, "generated", "*.c"))) do
             add_files(file, {public = true})
@@ -103,5 +120,44 @@ target(project_name, function()
         add_files("./src/arduino_entry.cpp", {public = true})
     end
 
-    add_files("../../core/air780epm/cores/air780epm/*.cpp", {public = true})
+    if not external_arduino_build then
+        add_files("../../core/air780epm/cores/air780epm/*.cpp", {public = true})
+    end
+end)
+
+target(project_name .. ".elf", function()
+    -- The CSDK linker script is preprocessed from this final ELF target.
+    -- Keep the OS selector visible here so FreeRTOS sections are placed in .load_apos.
+    add_defines("FEATURE_OS_ENABLE", "FEATURE_FREERTOS_ENABLE")
+
+    if get_config("arduino_external_build") then
+        local arduino_build_path = get_config("arduino_build_path")
+        if not arduino_build_path or arduino_build_path == "" then
+            raise("arduino_build_path is required when arduino_external_build is enabled")
+        end
+
+        local sketch_objects = os.files(path.join(arduino_build_path, "sketch", "*.o"))
+        if #sketch_objects == 0 then
+            raise("No Arduino CLI sketch objects found in " .. path.join(arduino_build_path, "sketch"))
+        end
+        for _, object_file in ipairs(sketch_objects) do
+            add_ldflags(object_file, {force = true})
+        end
+
+        local library_objects = os.files(path.join(arduino_build_path, "libraries", "**.o"))
+        for _, object_file in ipairs(library_objects) do
+            add_ldflags(object_file, {force = true})
+        end
+
+        local library_archives = os.files(path.join(arduino_build_path, "libraries", "**.a"))
+        for _, archive_file in ipairs(library_archives) do
+            add_ldflags("-Wl,--whole-archive", archive_file, "-Wl,--no-whole-archive", {force = true})
+        end
+
+        local core_archive = path.join(arduino_build_path, "core", "core.a")
+        if not os.isfile(core_archive) then
+            raise("Arduino CLI core archive not found: " .. core_archive)
+        end
+        add_ldflags("-Wl,--whole-archive", core_archive, "-Wl,--no-whole-archive", {force = true})
+    end
 end)

@@ -11,7 +11,6 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $configPath = Join-Path $repoRoot ".arduino-cli-config\arduino-cli.yaml"
-$localCli = Join-Path $repoRoot $ArduinoCliPath
 $commandCli = Get-Command arduino-cli -ErrorAction SilentlyContinue
 
 function Resolve-RepoPath {
@@ -22,6 +21,8 @@ function Resolve-RepoPath {
     }
     return [System.IO.Path]::GetFullPath((Join-Path $repoRoot $Path))
 }
+
+$localCli = Resolve-RepoPath -Path $ArduinoCliPath
 
 if (Test-Path -LiteralPath $localCli) {
     $cli = $localCli

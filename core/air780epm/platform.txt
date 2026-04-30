@@ -6,26 +6,27 @@ build.core=air780epm
 archive_file=core.a
 compiler.libraries.ldflags=
 
-tools.air780epm_cli.path={runtime.platform.path}/tools
-tools.air780epm_usb.path={runtime.platform.path}/tools
-tools.air780epm_usb.cmd=powershell.exe
+tools.air780epm_cli.path={runtime.platform.path}/../../../scripts
+tools.air780epm_usb.path={runtime.platform.path}/../../../scripts
+tools.air780epm_pwsh.cmd=pwsh
+tools.air780epm_usb.cmd=pwsh
 
-recipe.preproc.includes.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-stdout -SourceFile "{source_file}"
-recipe.preproc.macros.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-copy -SourceFile "{source_file}" -OutputFile "{preprocessed_file_path}"
+recipe.preproc.includes.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-stdout -SourceFile "{source_file}" -ExtraFlags:"{includes}"
+recipe.preproc.macros.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-copy -SourceFile "{source_file}" -OutputFile "{preprocessed_file_path}" -ExtraFlags:"{includes}"
 
-recipe.c.o.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" touch-file -SourceFile "{source_file}" -OutputFile "{object_file}"
-recipe.cpp.o.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" touch-file -SourceFile "{source_file}" -OutputFile "{object_file}"
-recipe.S.o.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" touch-file -SourceFile "{source_file}" -OutputFile "{object_file}"
+recipe.c.o.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" compile-c -SourceFile "{source_file}" -OutputFile "{object_file}" -ExtraFlags:"{includes}"
+recipe.cpp.o.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" compile-cpp -SourceFile "{source_file}" -OutputFile "{object_file}" -ExtraFlags:"{includes}"
+recipe.S.o.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" compile-asm -SourceFile "{source_file}" -OutputFile "{object_file}" -ExtraFlags:"{includes}"
 
 archive_file_path={build.path}/{archive_file}
-recipe.ar.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" touch-file -OutputFile "{archive_file_path}"
+recipe.ar.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" archive-object -SourceFile "{object_file}" -OutputFile "{archive_file_path}"
 
-recipe.c.combine.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" combine-xmake-build -BuildPath "{build.path}" -ProjectName "{build.project_name}" -SketchPath "{build.source.path}"
+recipe.c.combine.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" combine-csdk-prebuilt -BuildPath "{build.path}" -ProjectName "{build.project_name}" -SketchPath "{build.source.path}"
 
 recipe.output.tmp_file={build.project_name}.binpkg
 recipe.output.save_file={build.project_name}.{build.variant}.binpkg
 
-recipe.size.pattern.windows=powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" report-size -BuildPath "{build.path}" -ProjectName "{build.project_name}"
+recipe.size.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" report-size -BuildPath "{build.path}" -ProjectName "{build.project_name}"
 recipe.size.regex=^\.text\s+([0-9]+)$
 recipe.size.regex.data=^\.data\s+([0-9]+)$
 recipe.size.regex.eeprom=^\.eeprom\s+([0-9]+)$

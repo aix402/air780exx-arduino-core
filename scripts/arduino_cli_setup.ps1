@@ -1,7 +1,7 @@
 param(
     [string]$PackageName = "openluat",
     [string]$Architecture = "ec718pm",
-    [switch]$IsolatedData
+    [switch]$UseSystemData
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +31,7 @@ else {
 
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 
-if ((-not $IsolatedData) -and (Test-Path -LiteralPath (Join-Path $systemArduinoData "library_index.json"))) {
+if ($UseSystemData -and (Test-Path -LiteralPath (Join-Path $systemArduinoData "library_index.json"))) {
     $dataDir = $systemArduinoData
 }
 else {
