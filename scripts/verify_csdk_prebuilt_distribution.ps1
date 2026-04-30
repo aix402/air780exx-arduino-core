@@ -107,7 +107,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Assert-File -Path $distributionManifest -Description "CSDK prebuilt distribution manifest"
-$manifest = Get-Content -Raw -LiteralPath $distributionManifest | ConvertFrom-Json
+$manifestText = Get-Content -Raw -LiteralPath $distributionManifest
+if ($manifestText -like "*luatos-soc-2024*") {
+    throw "Distribution manifest should not reference luatos-soc-2024"
+}
+$manifest = $manifestText | ConvertFrom-Json
 if (-not [bool]$manifest.distribution_package) {
     throw "Distribution manifest is missing distribution_package=true"
 }
@@ -126,6 +130,18 @@ Assert-TextContains `
     -Description "Distribution preprocessed memory map"
 if (($manifest.package.PSObject.Properties.Name -contains "include_dirs") -and @($manifest.package.include_dirs).Count -gt 0) {
     throw "Distribution manifest should not expose package include dirs after exporting preprocessed mem_map.txt"
+}
+foreach ($path in @(
+    @($manifest.include_dirs) +
+    @($manifest.link.link_dirs) +
+    @($manifest.package.fcelf, $manifest.package.section_info, $manifest.package.cp_firmware_bin, $manifest.package.mem_map, $manifest.package.pack_dir, $manifest.package.comdb)
+)) {
+    if ([string]$path -like "*\external\luatos-soc-2024\*") {
+        throw "Distribution manifest should not reference external luatos-soc-2024: $path"
+    }
+}
+if (Test-Path -LiteralPath (Join-Path $distributionRoot "external\luatos-soc-2024") -PathType Container) {
+    throw "Distribution should not ship external\luatos-soc-2024"
 }
 if (Test-Path -LiteralPath (Join-Path $distributionRoot "abi\linker\air780epm_flash.arduino_ctor.c") -PathType Leaf) {
     throw "Distribution should not ship the intermediate linker template"

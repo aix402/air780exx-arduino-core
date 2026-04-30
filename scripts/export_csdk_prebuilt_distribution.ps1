@@ -200,6 +200,22 @@ function Copy-DirectoryToDestination {
     }
 }
 
+function Copy-FileToDestination {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    $sourceFull = Get-FullPath $Source
+    Assert-File -Path $sourceFull -Description "distribution source file"
+    $destinationFull = Get-FullPath $Destination
+    $destinationDirectory = Split-Path -Parent $destinationFull
+    if ($destinationDirectory -and -not (Test-Path -LiteralPath $destinationDirectory)) {
+        New-Item -ItemType Directory -Force -Path $destinationDirectory | Out-Null
+    }
+    Copy-Item -LiteralPath $sourceFull -Destination $destinationFull -Force
+}
+
 function Copy-HeaderDirectoryPreservingRepoPath {
     param(
         [Parameter(Mandatory = $true)][string]$Source,
@@ -291,6 +307,9 @@ $generatedAbiDirectory = Join-Path $outputFullDirectory "abi"
 $generatedLinkerTemplate = Join-Path $generatedAbiDirectory "linker\air780epm_flash.arduino_ctor.c"
 $generatedLinkerScript = Join-Path $generatedAbiDirectory "linker\air780epm_flash.ld"
 $generatedMemMap = Join-Path $generatedAbiDirectory "package\mem_map.txt"
+$distributionLibDirectory = Join-Path $generatedAbiDirectory "lib"
+$distributionPackageDirectory = Join-Path $generatedAbiDirectory "package"
+$distributionPackDirectory = Join-Path $outputFullDirectory "tools\pack"
 
 $linkerIncludeDirs = @(
     $manifest.runner_path,
@@ -379,7 +398,7 @@ foreach ($directory in $linkDirectories) {
     foreach ($libraryFileName in $requiredLinkLibraries) {
         $libraryPath = Join-Path $directory $libraryFileName
         if (Test-Path -LiteralPath $libraryPath -PathType Leaf) {
-            Copy-FilePreservingRepoPath -Source $libraryPath -DestinationRoot $outputFullDirectory -SourceRepoRoot $sourceRepoRoot
+            Copy-FileToDestination -Source $libraryPath -Destination (Join-Path $distributionLibDirectory $libraryFileName)
         }
     }
 }
@@ -387,7 +406,7 @@ foreach ($directory in $linkDirectories) {
 foreach ($directory in @(
     (Join-Path $manifest.csdk_root "tools\pack")
 )) {
-    Copy-DirectoryPreservingRepoPath -Source $directory -DestinationRoot $outputFullDirectory -SourceRepoRoot $sourceRepoRoot
+    Copy-DirectoryToDestination -Source $directory -Destination $distributionPackDirectory
 }
 
 $missingLibraries = @()
@@ -421,7 +440,7 @@ foreach ($file in @(
 }
 
 foreach ($file in $files) {
-    Copy-FilePreservingRepoPath -Source $file -DestinationRoot $outputFullDirectory -SourceRepoRoot $sourceRepoRoot
+    Copy-FileToDestination -Source $file -Destination (Join-Path $distributionPackageDirectory (Split-Path -Leaf $file))
 }
 
 $toolchainBin = Get-FullPath $manifest.toolchain.bin
@@ -447,11 +466,19 @@ $distributionManifest["distribution_package"] = $true
 $distributionManifest["distribution_source_manifest"] = $manifestFullPath
 $distributionManifest["distribution_copy_policy"] = "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain"
 $distributionManifest["repo_root"] = $outputFullDirectory
+$distributionManifest["csdk_root"] = $null
+$distributionManifest["link"]["link_dirs"] = @($distributionLibDirectory)
 $distributionManifest["link"]["linker_script_template"] = $null
 $distributionManifest["link"]["linker_script_output"] = $generatedLinkerScript
 $distributionManifest["link"]["preprocessed_linker_script"] = $generatedLinkerScript
+$distributionManifest["package"]["fcelf"] = (Join-Path $distributionPackageDirectory "fcelf.exe")
+$distributionManifest["package"]["section_info"] = (Join-Path $distributionPackageDirectory "sectionInfo_ec718pm.json")
+$distributionManifest["package"]["bootloader_bin"] = (Join-Path $distributionPackageDirectory "ap_bootloader.bin")
+$distributionManifest["package"]["cp_firmware_bin"] = (Join-Path $distributionPackageDirectory "cp-demo-flash.bin")
 $distributionManifest["package"]["mem_map"] = $generatedMemMap
 $distributionManifest["package"]["include_dirs"] = @()
+$distributionManifest["package"]["pack_dir"] = $distributionPackDirectory
+$distributionManifest["package"]["comdb"] = (Join-Path $distributionPackageDirectory "comdb.txt")
 
 $distributionManifestPath = Join-Path $outputFullDirectory "arduino_export_manifest.json"
 $encoding = [System.Text.UTF8Encoding]::new($false)

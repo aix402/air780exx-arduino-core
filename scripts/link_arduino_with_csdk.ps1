@@ -49,6 +49,31 @@ function Assert-File {
     }
 }
 
+function Find-LinkLibrary {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)][string]$FileName
+    )
+
+    $candidatePaths = @(
+        (Join-Path $Manifest.runner_path "build\air780epm_runner\$FileName"),
+        (Join-Path $Manifest.runner_path "build\csdk\$FileName")
+    )
+    foreach ($linkDir in @($Manifest.link.link_dirs)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$linkDir)) {
+            $candidatePaths += (Join-Path ([string]$linkDir) $FileName)
+        }
+    }
+
+    foreach ($candidatePath in $candidatePaths) {
+        if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+            return $candidatePath
+        }
+    }
+
+    return $null
+}
+
 function Test-PrebuildArtifacts {
     param([Parameter(Mandatory = $true)]$Manifest)
 
@@ -61,8 +86,8 @@ function Test-PrebuildArtifacts {
     }
 
     $requiredFiles = @(
-        (Join-Path $Manifest.runner_path "build\air780epm_runner\libair780epm_runner.a"),
-        (Join-Path $Manifest.runner_path "build\csdk\libcsdk.a"),
+        (Find-LinkLibrary -Manifest $Manifest -FileName "libair780epm_runner.a"),
+        (Find-LinkLibrary -Manifest $Manifest -FileName "libcsdk.a"),
         $Manifest.package.bootloader_bin,
         $Manifest.package.cp_firmware_bin,
         $Manifest.package.fcelf,

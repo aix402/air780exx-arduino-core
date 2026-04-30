@@ -180,6 +180,31 @@ function Resolve-SevenZip {
     throw "7-Zip executable was not found. Pass -SevenZipPath to enable .soc packaging."
 }
 
+function Find-LinkLibrary {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)][string]$FileName
+    )
+
+    $candidatePaths = @(
+        (Join-Path $Manifest.runner_path "build\air780epm_runner\$FileName"),
+        (Join-Path $Manifest.runner_path "build\csdk\$FileName")
+    )
+    foreach ($linkDir in @($Manifest.link.link_dirs)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$linkDir)) {
+            $candidatePaths += (Join-Path ([string]$linkDir) $FileName)
+        }
+    }
+
+    foreach ($candidatePath in $candidatePaths) {
+        if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+            return $candidatePath
+        }
+    }
+
+    return $null
+}
+
 $buildFullPath = Get-FullPath $BuildPath
 $manifestFullPath = Get-FullPath $ManifestPath
 Assert-File -Path $manifestFullPath -Description "Arduino/CSDK export manifest"
@@ -199,8 +224,8 @@ $libraryDir = Join-Path $buildFullPath "libraries"
 $libraryObjects = @(Get-ChildItem -LiteralPath $libraryDir -Recurse -Filter "*.o" -File -ErrorAction SilentlyContinue)
 $libraryArchives = @(Get-ChildItem -LiteralPath $libraryDir -Recurse -Filter "*.a" -File -ErrorAction SilentlyContinue)
 
-$runnerArchive = Join-Path $manifest.runner_path "build\air780epm_runner\libair780epm_runner.a"
-$csdkArchive = Join-Path $manifest.runner_path "build\csdk\libcsdk.a"
+$runnerArchive = Find-LinkLibrary -Manifest $manifest -FileName "libair780epm_runner.a"
+$csdkArchive = Find-LinkLibrary -Manifest $manifest -FileName "libcsdk.a"
 Assert-File -Path $runnerArchive -Description "Runner static archive"
 Assert-File -Path $csdkArchive -Description "CSDK static archive"
 
@@ -427,14 +452,25 @@ if ($Package) {
         }
         Remove-Item -LiteralPath $packDir -Recurse -Force
     }
-    Copy-Item -LiteralPath (Join-Path $manifest.csdk_root "tools\pack") -Destination $packDir -Recurse -Force
+    if ($manifest.package.PSObject.Properties.Name -contains "pack_dir" -and -not [string]::IsNullOrWhiteSpace([string]$manifest.package.pack_dir)) {
+        $sourcePackDir = [string]$manifest.package.pack_dir
+    }
+    else {
+        $sourcePackDir = Join-Path $manifest.csdk_root "tools\pack"
+    }
+    Copy-Item -LiteralPath $sourcePackDir -Destination $packDir -Recurse -Force
 
     $infoPath = Join-Path $packDir "info.json"
     $info = Get-Content -Raw -LiteralPath $infoPath | ConvertFrom-Json
     $info.rom.file = [System.IO.Path]::GetFileName($binpkgOutput)
     [System.IO.File]::WriteAllText($infoPath, (($info | ConvertTo-Json -Depth 10) + "`n"), $encoding)
 
-    $comdbSource = Join-Path $manifest.csdk_root "PLAT\tools\$($manifest.chip_target)\comdb.txt"
+    if ($manifest.package.PSObject.Properties.Name -contains "comdb" -and -not [string]::IsNullOrWhiteSpace([string]$manifest.package.comdb)) {
+        $comdbSource = [string]$manifest.package.comdb
+    }
+    else {
+        $comdbSource = Join-Path $manifest.csdk_root "PLAT\tools\$($manifest.chip_target)\comdb.txt"
+    }
     Assert-File -Path $comdbSource -Description "COMDB file"
     Copy-Item -LiteralPath $binpkgOutput -Destination $packDir -Force
     Copy-Item -LiteralPath $elfOutput -Destination $packDir -Force
