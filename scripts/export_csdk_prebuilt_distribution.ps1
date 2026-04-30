@@ -286,6 +286,33 @@ function ConvertTo-DistributionValue {
     return $Value
 }
 
+function ConvertTo-ManifestRelativePath {
+    param(
+        [AllowNull()][string]$Value,
+        [Parameter(Mandatory = $true)][string]$BaseRoot
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $Value
+    }
+    if ([System.IO.Path]::IsPathRooted($Value) -and $Value.StartsWith($BaseRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return [System.IO.Path]::GetRelativePath($BaseRoot, $Value)
+    }
+    return $Value
+}
+
+function ConvertTo-ManifestRelativePathArray {
+    param(
+        [AllowNull()]$Value,
+        [Parameter(Mandatory = $true)][string]$BaseRoot
+    )
+
+    if ($null -eq $Value) {
+        return @()
+    }
+    return @($Value | ForEach-Object { ConvertTo-ManifestRelativePath -Value ([string]$_) -BaseRoot $BaseRoot })
+}
+
 $manifestFullPath = Get-FullPath $ManifestPath
 Assert-File -Path $manifestFullPath -Description "Arduino/CSDK export manifest"
 $manifest = Get-Content -Raw -LiteralPath $manifestFullPath | ConvertFrom-Json
@@ -447,6 +474,10 @@ $toolchainBin = Get-FullPath $manifest.toolchain.bin
 $toolchainRoot = Get-FullPath (Join-Path $toolchainBin "..")
 $distributionToolchainRoot = Join-Path $outputFullDirectory "toolchain\gnu-rm"
 Copy-DirectoryToDestination -Source $toolchainRoot -Destination $distributionToolchainRoot
+$toolchainPackageManifest = Join-Path $distributionToolchainRoot "manifest.txt"
+if (Test-Path -LiteralPath $toolchainPackageManifest -PathType Leaf) {
+    Remove-Item -LiteralPath $toolchainPackageManifest -Force
+}
 $distributionToolchainBin = Join-Path $distributionToolchainRoot "bin"
 
 $distributionManifest = ConvertTo-DistributionValue `
@@ -463,7 +494,7 @@ $distributionManifest["toolchain"] = [ordered]@{
     size = (Join-Path $distributionToolchainBin "arm-none-eabi-size.exe")
 }
 $distributionManifest["distribution_package"] = $true
-$distributionManifest["distribution_source_manifest"] = $manifestFullPath
+$distributionManifest["distribution_source_manifest"] = [System.IO.Path]::GetRelativePath($repoRoot, $manifestFullPath)
 $distributionManifest["distribution_copy_policy"] = "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain"
 $distributionManifest["repo_root"] = $outputFullDirectory
 $distributionManifest["csdk_root"] = $null
@@ -479,6 +510,22 @@ $distributionManifest["package"]["mem_map"] = $generatedMemMap
 $distributionManifest["package"]["include_dirs"] = @()
 $distributionManifest["package"]["pack_dir"] = $distributionPackDirectory
 $distributionManifest["package"]["comdb"] = (Join-Path $distributionPackageDirectory "comdb.txt")
+foreach ($propertyName in @("repo_root", "runner_path", "luatos_root", "distribution_source_manifest")) {
+    if ($distributionManifest.Contains($propertyName)) {
+        $distributionManifest[$propertyName] = ConvertTo-ManifestRelativePath -Value ([string]$distributionManifest[$propertyName]) -BaseRoot $outputFullDirectory
+    }
+}
+$distributionManifest["include_dirs"] = ConvertTo-ManifestRelativePathArray -Value $distributionManifest["include_dirs"] -BaseRoot $outputFullDirectory
+foreach ($propertyName in @("bin", "cc", "cxx", "ar", "objcopy", "objdump", "size")) {
+    $distributionManifest["toolchain"][$propertyName] = ConvertTo-ManifestRelativePath -Value ([string]$distributionManifest["toolchain"][$propertyName]) -BaseRoot $outputFullDirectory
+}
+foreach ($propertyName in @("linker_script_output", "map_output", "elf_output", "preprocessed_linker_script")) {
+    $distributionManifest["link"][$propertyName] = ConvertTo-ManifestRelativePath -Value ([string]$distributionManifest["link"][$propertyName]) -BaseRoot $outputFullDirectory
+}
+$distributionManifest["link"]["link_dirs"] = ConvertTo-ManifestRelativePathArray -Value $distributionManifest["link"]["link_dirs"] -BaseRoot $outputFullDirectory
+foreach ($propertyName in @("fcelf", "section_info", "bootloader_bin", "cp_firmware_bin", "mem_map", "binpkg_output", "soc_output", "pack_dir", "comdb")) {
+    $distributionManifest["package"][$propertyName] = ConvertTo-ManifestRelativePath -Value ([string]$distributionManifest["package"][$propertyName]) -BaseRoot $outputFullDirectory
+}
 
 $distributionManifestPath = Join-Path $outputFullDirectory "arduino_export_manifest.json"
 $encoding = [System.Text.UTF8Encoding]::new($false)

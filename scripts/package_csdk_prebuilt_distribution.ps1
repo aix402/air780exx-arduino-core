@@ -60,6 +60,12 @@ function Get-SafeName {
     return ($Value -replace '[^A-Za-z0-9._-]+', '-').Trim('-')
 }
 
+function Get-RepoRelativePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    return [System.IO.Path]::GetRelativePath($repoRoot, ([System.IO.Path]::GetFullPath($Path)))
+}
+
 $distributionRoot = Resolve-RepoPath $DistributionDirectory
 $outputRoot = Resolve-RepoPath $OutputDirectory
 $manifestPath = Join-Path $distributionRoot "arduino_export_manifest.json"
@@ -128,12 +134,12 @@ $releaseManifest = [ordered]@{
     generated_at = (Get-Date).ToString("o")
     git_branch = $branch
     git_commit = $commit
-    distribution_directory = $distributionRoot
+    distribution_directory = Get-RepoRelativePath $distributionRoot
     distribution_size_bytes = [Int64]$distributionSizeBytes
-    archive = $zipPath
+    archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length
     sha256 = $hash
-    distribution_manifest = $manifestPath
+    distribution_manifest = Get-RepoRelativePath $manifestPath
     chip_target = $manifest.chip_target
     distribution_copy_policy = $manifest.distribution_copy_policy
     toolchain_bin = $manifest.toolchain.bin

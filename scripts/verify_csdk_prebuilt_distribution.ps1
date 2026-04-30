@@ -17,6 +17,18 @@ function Resolve-RepoPath {
     return [System.IO.Path]::GetFullPath((Join-Path $repoRoot $Path))
 }
 
+function Resolve-DistributionManifestPath {
+    param([AllowNull()][string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        return $Path
+    }
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        return [System.IO.Path]::GetFullPath($Path)
+    }
+    return [System.IO.Path]::GetFullPath((Join-Path $distributionRoot $Path))
+}
+
 function Assert-File {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -111,6 +123,9 @@ $manifestText = Get-Content -Raw -LiteralPath $distributionManifest
 if ($manifestText -like "*luatos-soc-2024*") {
     throw "Distribution manifest should not reference luatos-soc-2024"
 }
+if ($manifestText -match '[A-Za-z]:\\') {
+    throw "Distribution manifest should not contain machine-local absolute Windows paths"
+}
 $manifest = $manifestText | ConvertFrom-Json
 if (-not [bool]$manifest.distribution_package) {
     throw "Distribution manifest is missing distribution_package=true"
@@ -118,14 +133,14 @@ if (-not [bool]$manifest.distribution_package) {
 if ([string]$manifest.distribution_copy_policy -ne "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain") {
     throw "Distribution manifest has unexpected copy policy: $($manifest.distribution_copy_policy)"
 }
-Assert-File -Path ([string]$manifest.link.preprocessed_linker_script) -Description "Distribution preprocessed linker script"
+Assert-File -Path (Resolve-DistributionManifestPath ([string]$manifest.link.preprocessed_linker_script)) -Description "Distribution preprocessed linker script"
 Assert-TextContains `
-    -Path ([string]$manifest.link.preprocessed_linker_script) `
+    -Path (Resolve-DistributionManifestPath ([string]$manifest.link.preprocessed_linker_script)) `
     -Pattern "__arduino_init_array_start" `
     -Description "Distribution preprocessed linker script"
-Assert-File -Path ([string]$manifest.package.mem_map) -Description "Distribution preprocessed memory map"
+Assert-File -Path (Resolve-DistributionManifestPath ([string]$manifest.package.mem_map)) -Description "Distribution preprocessed memory map"
 Assert-TextContains `
-    -Path ([string]$manifest.package.mem_map) `
+    -Path (Resolve-DistributionManifestPath ([string]$manifest.package.mem_map)) `
     -Pattern "AP_FLASH_LOAD_ADDR" `
     -Description "Distribution preprocessed memory map"
 if (($manifest.package.PSObject.Properties.Name -contains "include_dirs") -and @($manifest.package.include_dirs).Count -gt 0) {
@@ -173,7 +188,9 @@ foreach ($relativeNetworkHeader in @(
         throw "Distribution should not ship SDK network-private header: $relativeNetworkHeader"
     }
 }
-$toolchainPaths = @($manifest.toolchain.bin, $manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size)
+$toolchainPaths = @($manifest.toolchain.bin, $manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size) | ForEach-Object {
+    Resolve-DistributionManifestPath ([string]$_)
+}
 foreach ($toolPath in $toolchainPaths) {
     if (-not ([string]$toolPath).StartsWith($distributionRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Distribution toolchain path is outside distribution root: $toolPath"
@@ -182,9 +199,9 @@ foreach ($toolPath in $toolchainPaths) {
         throw "Distribution toolchain path still references xmake cache: $toolPath"
     }
 }
-Assert-Directory -Path ([string]$manifest.toolchain.bin) -Description "Distribution toolchain bin directory"
+Assert-Directory -Path (Resolve-DistributionManifestPath ([string]$manifest.toolchain.bin)) -Description "Distribution toolchain bin directory"
 foreach ($toolPath in @($manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size)) {
-    Assert-File -Path ([string]$toolPath) -Description "Distribution toolchain file"
+    Assert-File -Path (Resolve-DistributionManifestPath ([string]$toolPath)) -Description "Distribution toolchain file"
 }
 
 $distributionSizeBytes = (Get-ChildItem -LiteralPath $distributionRoot -Recurse -File | Measure-Object -Property Length -Sum).Sum

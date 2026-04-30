@@ -35,7 +35,63 @@ function Read-Manifest {
         }
     }
 
-    return Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
+    $manifest = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
+    $manifestRoot = Split-Path -Parent ([System.IO.Path]::GetFullPath($Path))
+    return Resolve-ManifestPaths -Manifest $manifest -BaseRoot $manifestRoot
+}
+
+function Resolve-ManifestPathValue {
+    param(
+        [AllowNull()]$Value,
+        [Parameter(Mandatory = $true)][string]$BaseRoot
+    )
+
+    if ($null -eq $Value) {
+        return $null
+    }
+    if ($Value -is [string]) {
+        if ([string]::IsNullOrWhiteSpace($Value) -or [System.IO.Path]::IsPathRooted($Value)) {
+            return $Value
+        }
+        return [System.IO.Path]::GetFullPath((Join-Path $BaseRoot $Value))
+    }
+    if ($Value -is [System.Array]) {
+        return @($Value | ForEach-Object { Resolve-ManifestPathValue -Value $_ -BaseRoot $BaseRoot })
+    }
+    return $Value
+}
+
+function Resolve-ManifestPaths {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)][string]$BaseRoot
+    )
+
+    foreach ($propertyName in @("repo_root", "runner_path", "csdk_root", "luatos_root", "include_dirs")) {
+        if ($Manifest.PSObject.Properties.Name -contains $propertyName) {
+            $Manifest.$propertyName = Resolve-ManifestPathValue -Value $Manifest.$propertyName -BaseRoot $BaseRoot
+        }
+    }
+    if ($Manifest.PSObject.Properties.Name -contains "toolchain" -and $null -ne $Manifest.toolchain) {
+        foreach ($property in $Manifest.toolchain.PSObject.Properties) {
+            $property.Value = Resolve-ManifestPathValue -Value $property.Value -BaseRoot $BaseRoot
+        }
+    }
+    if ($Manifest.PSObject.Properties.Name -contains "link" -and $null -ne $Manifest.link) {
+        foreach ($propertyName in @("linker_script_template", "linker_script_output", "map_output", "elf_output", "link_dirs", "preprocessed_linker_script")) {
+            if ($Manifest.link.PSObject.Properties.Name -contains $propertyName) {
+                $Manifest.link.$propertyName = Resolve-ManifestPathValue -Value $Manifest.link.$propertyName -BaseRoot $BaseRoot
+            }
+        }
+    }
+    if ($Manifest.PSObject.Properties.Name -contains "package" -and $null -ne $Manifest.package) {
+        foreach ($propertyName in @("fcelf", "section_info", "bootloader_bin", "cp_firmware_bin", "mem_map", "include_dirs", "binpkg_output", "soc_output", "pack_dir", "comdb")) {
+            if ($Manifest.package.PSObject.Properties.Name -contains $propertyName) {
+                $Manifest.package.$propertyName = Resolve-ManifestPathValue -Value $Manifest.package.$propertyName -BaseRoot $BaseRoot
+            }
+        }
+    }
+    return $Manifest
 }
 
 function Assert-File {

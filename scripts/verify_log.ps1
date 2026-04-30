@@ -18,8 +18,8 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $cliCandidates = @(
-    (Join-Path $repoRoot $LuatOSCliPath),
-    (Join-Path $repoRoot $LuatOSCliSourcePath)
+    if ([System.IO.Path]::IsPathRooted($LuatOSCliPath)) { $LuatOSCliPath } else { Join-Path $repoRoot $LuatOSCliPath }
+    if ([System.IO.Path]::IsPathRooted($LuatOSCliSourcePath)) { $LuatOSCliSourcePath } else { Join-Path $repoRoot $LuatOSCliSourcePath }
 )
 $cliFullPath = $cliCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 
