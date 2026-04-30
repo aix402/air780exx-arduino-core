@@ -315,7 +315,7 @@ Invoke-PreprocessFile `
     -InputPath (Join-Path $manifest.csdk_root "PLAT\device\target\board\ec7xx_0h00\common\inc\mem_map.h") `
     -OutputPath $generatedMemMap `
     -Defines @($manifest.defines) `
-    -IncludeDirs @($manifest.include_dirs) `
+    -IncludeDirs @($manifest.package.include_dirs) `
     -KeepDefines
 
 $script:DistributionHeaderExcludeFiles = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)

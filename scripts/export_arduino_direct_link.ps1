@@ -366,12 +366,17 @@ if ($Package) {
         Copy-Item -LiteralPath (Get-FullPath $manifest.package.mem_map) -Destination $memMapOutput -Force
     }
     else {
+        $packageIncludeDirs = @($manifest.include_dirs)
+        if ($manifest.package.PSObject.Properties.Name -contains "include_dirs") {
+            $packageIncludeDirs = @($manifest.package.include_dirs)
+        }
+
         Invoke-PreprocessFile `
             -Compiler $manifest.toolchain.cc `
             -InputPath (Join-Path $manifest.csdk_root "PLAT\device\target\board\ec7xx_0h00\common\inc\mem_map.h") `
             -OutputPath $memMapOutput `
             -Defines @($manifest.defines) `
-            -IncludeDirs @($manifest.include_dirs) `
+            -IncludeDirs $packageIncludeDirs `
             -KeepDefines
     }
 

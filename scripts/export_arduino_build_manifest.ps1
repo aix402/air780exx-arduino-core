@@ -69,77 +69,6 @@ $toolchainBin = Get-XmakeToolchainBinDir
 
 $includeDirs = [System.Collections.Generic.List[string]]::new()
 foreach ($path in @(
-    "$csdkRoot\PLAT\driver\hal\ec7xx\ap\inc\ec718",
-    "$csdkRoot\PLAT\driver\chip\ec7xx\ap\inc\ec718",
-    "$csdkRoot\PLAT\device\target\board\common\ARMCM3\inc",
-    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\common\inc",
-    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\common\pkginc",
-    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\ap\gcc",
-    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\ap\inc",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\eeprom",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\camera",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\camera\cameraDev",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\codec",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\codec\codecDev",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\audio",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\audio\codec",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\audio\codec\es8311",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\lcd\lcdDev",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\lcd",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\ntc",
-    "$csdkRoot\PLAT\driver\board\ec7xx_0h00\inc\exstorage",
-    "$csdkRoot\PLAT\driver\hal\common\inc",
-    "$csdkRoot\PLAT\driver\hal\ec7xx\ap\inc",
-    "$csdkRoot\PLAT\driver\chip\ec7xx\ap\inc",
-    "$csdkRoot\PLAT\driver\chip\ec7xx\ap\inc_cmsis",
-    "$csdkRoot\PLAT\os\freertos\inc",
-    "$csdkRoot\PLAT\os\freertos\CMSIS\common\inc",
-    "$csdkRoot\PLAT\os\freertos\CMSIS\ap\inc",
-    "$csdkRoot\PLAT\os\freertos\portable\mem\tlsf",
-    "$csdkRoot\PLAT\os\freertos\portable\gcc",
-    "$csdkRoot\PLAT\middleware\developed\nvram\inc",
-    "$csdkRoot\PLAT\middleware\developed\nvram\ec7xx\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\psdial\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\cms\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\psil\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\psstk\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\sockmgr\inc",
-    "$csdkRoot\PLAT\middleware\developed\cms\cmsnetlight\inc",
-    "$csdkRoot\PLAT\middleware\developed\ecapi\aal\inc",
-    "$csdkRoot\PLAT\middleware\developed\ecapi\appmwapi\inc",
-    "$csdkRoot\PLAT\middleware\developed\ecapi\psapi\inc",
-    "$csdkRoot\PLAT\middleware\developed\common\inc",
-    "$csdkRoot\PLAT\middleware\developed\psnv\inc",
-    "$csdkRoot\PLAT\middleware\developed\tcpipmgr\app\inc",
-    "$csdkRoot\PLAT\middleware\developed\tcpipmgr\common\inc",
-    "$csdkRoot\PLAT\middleware\developed\yrcompress",
-    "$csdkRoot\PLAT\middleware\thirdparty\lwip\src\include",
-    "$csdkRoot\PLAT\middleware\developed\ccio\pub",
-    "$csdkRoot\PLAT\middleware\developed\ccio\device\inc",
-    "$csdkRoot\PLAT\middleware\developed\ccio\service\inc",
-    "$csdkRoot\PLAT\middleware\developed\ccio\custom\inc",
-    "$csdkRoot\PLAT\middleware\developed\fota\pub",
-    "$csdkRoot\PLAT\middleware\developed\fota\custom\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atdecoder\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atps\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atps\inc\cnfind",
-    "$csdkRoot\PLAT\middleware\developed\at\atcust\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atcust\inc\cnfind",
-    "$csdkRoot\PLAT\middleware\developed\at\atentity\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atreply\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atref\inc",
-    "$csdkRoot\PLAT\middleware\developed\at\atref\inc\cnfind",
-    "$csdkRoot\PLAT\core\driver\include",
-    "$csdkRoot\PLAT\core\common\include",
-    "$csdkRoot\PLAT\core\multimedia\include",
-    "$csdkRoot\PLAT\core\tts\include",
-    "$csdkRoot\PLAT\prebuild\PS\inc",
-    "$csdkRoot\PLAT\prebuild\PLAT\inc",
-    "$csdkRoot\PLAT\tools\ec718pm",
-    "$csdkRoot\thirdparty\littlefs",
-    "$csdkRoot\thirdparty\littlefs\port",
-    "$csdkRoot\interface\include",
     "$luatosRoot\luat\include",
     "$luatosRoot\components\pins\include",
     "$luatosRoot\components\common",
@@ -165,6 +94,15 @@ foreach ($path in @(
     "$repoRoot\core\air780epm\variants\air780epm_dev"
 )) {
     Add-ExistingDirectory -List $includeDirs -Path $path
+}
+
+$packageIncludeDirs = [System.Collections.Generic.List[string]]::new()
+foreach ($path in @(
+    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\common\pkginc",
+    "$csdkRoot\PLAT\device\target\board\ec7xx_0h00\common\inc",
+    "$runnerPath"
+)) {
+    Add-ExistingDirectory -List $packageIncludeDirs -Path $path
 }
 
 $defines = @(
@@ -377,6 +315,7 @@ $manifest = [ordered]@{
         bootloader_bin = (Get-FullPath "$runnerPath\build\ap_bootloader\ap_bootloader.bin")
         cp_firmware_bin = (Get-FullPath "$csdkRoot\PLAT\prebuild\FW\lib\gcc\ec718pm\oc\cp-demo-flash.bin")
         mem_map = (Get-FullPath "$runnerPath\out\mem_map.txt")
+        include_dirs = $packageIncludeDirs.ToArray()
         binpkg_output = (Get-FullPath "$runnerPath\out\air780epm_runner.binpkg")
         soc_output = (Get-FullPath "$runnerPath\out\air780epm_runner_ec718pm.soc")
     }
