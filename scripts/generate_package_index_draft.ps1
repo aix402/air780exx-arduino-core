@@ -4,9 +4,11 @@ param(
     [string]$PlatformArchive,
     [string]$CsdkArchive,
     [string]$GnuRmArchive,
+    [string]$LuatOSCliArchive,
     [string]$PlatformVersion = "0.1.0",
     [string]$CsdkVersion = "0.1.0",
-    [string]$GnuRmVersion = "10.2.1-ec718"
+    [string]$GnuRmVersion = "10.2.1-ec718",
+    [string]$LuatOSCliVersion = "1.8.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -80,9 +82,13 @@ if ([string]::IsNullOrWhiteSpace($CsdkArchive)) {
 if ([string]::IsNullOrWhiteSpace($GnuRmArchive)) {
     $GnuRmArchive = Find-LatestArchive -Pattern "gnu-rm-*.zip"
 }
+if ([string]::IsNullOrWhiteSpace($LuatOSCliArchive)) {
+    $LuatOSCliArchive = Find-LatestArchive -Pattern "luatos-cli-*.zip"
+}
 
 $csdk = Get-ArchiveEntry -Path $CsdkArchive -BaseUrl $BaseUrl
 $gnuRm = Get-ArchiveEntry -Path $GnuRmArchive -BaseUrl $BaseUrl
+$luatosCli = Get-ArchiveEntry -Path $LuatOSCliArchive -BaseUrl $BaseUrl
 
 $platform = [ordered]@{
     name = "AIR780EXX Arduino Core"
@@ -105,6 +111,11 @@ $platform = [ordered]@{
             packager = "openluat"
             name = "gnu-rm"
             version = $GnuRmVersion
+        },
+        [ordered]@{
+            packager = "openluat"
+            name = "luatos-cli"
+            version = $LuatOSCliVersion
         }
     )
 }
@@ -135,6 +146,13 @@ $index = [ordered]@{
                     version = $GnuRmVersion
                     systems = @(
                         (New-ToolSystem -HostName "i686-mingw32" -Archive $gnuRm)
+                    )
+                },
+                [ordered]@{
+                    name = "luatos-cli"
+                    version = $LuatOSCliVersion
+                    systems = @(
+                        (New-ToolSystem -HostName "i686-mingw32" -Archive $luatosCli)
                     )
                 }
             )

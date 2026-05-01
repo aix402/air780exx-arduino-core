@@ -74,6 +74,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "Arduino platform packaging failed with exit code $LASTEXITCODE"
 }
 
+Write-Host "==> Package luatos-cli tool archive"
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") -Clean
+if ($LASTEXITCODE -ne 0) {
+    throw "luatos-cli tool packaging failed with exit code $LASTEXITCODE"
+}
+
 Write-Host "==> Generate package index draft"
 $baseUrl = "http://127.0.0.1:$Port"
 & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") -BaseUrl $baseUrl
@@ -118,6 +124,9 @@ directories:
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "update-index")
     & $arduinoCliFullPath --config-file $configPath core uninstall openluat:ec718pm 2>$null | Write-Output
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "install", "openluat:ec718pm")
+    $installedLuatOSCli = Join-Path $dataDir "packages\openluat\tools\luatos-cli\1.8.0\luatos-cli.exe"
+    Assert-File -Path $installedLuatOSCli -Description "package-index installed luatos-cli"
+    & $installedLuatOSCli --version | Write-Output
 
     Write-Host "==> Compile Blink from installed package"
     Invoke-SmokeCompile `

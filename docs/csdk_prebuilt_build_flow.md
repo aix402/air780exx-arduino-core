@@ -91,6 +91,7 @@ The release candidate is split into three Arduino package-index artifacts:
 - `openluat:ec718pm`: the Arduino platform archive.
 - `openluat:air780epm-csdk`: the CSDK/runner ABI tool archive.
 - `openluat:gnu-rm`: the GNU Arm Embedded toolchain archive.
+- `openluat:luatos-cli`: the Windows flashing/log tool archive.
 
 The platform archive contains:
 
@@ -101,7 +102,7 @@ The platform archive contains:
 - bundled platform examples under `examples`.
 - bundled AIR780EPM helper libraries under `libraries`.
 
-The tool archives must use a single short top-level directory in the zip. Arduino CLI strips that directory while installing the tool. The CSDK tool archive currently uses `air780epm-csdk`; the GNU Arm tool archive uses `gnu-rm`.
+The tool archives must use a single short top-level directory in the zip. Arduino CLI strips that directory while installing the tool. The CSDK tool archive currently uses `air780epm-csdk`; the GNU Arm tool archive uses `gnu-rm`; the flash tool archive uses `luatos-cli`.
 
 The package-index draft is generated with:
 
@@ -110,7 +111,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate_package_index_d
   -BaseUrl https://example.com/openluat/arduino/releases
 ```
 
-Before publishing, replace the draft base URL with the real release URL and upload all three archives listed by the generated index.
+Before publishing, replace the draft base URL with the real release URL and upload all archives listed by the generated index.
 
 ## Arduino CLI Compile Mode
 
@@ -330,7 +331,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\upload_core.ps1 `
   -SocFile .\.arduino-cli-work\<Sketch>\<Project>_ec718pm.soc
 ```
 
-The upload script calls the worktree-local `luatos-cli`.
+In Boards Manager installs, the upload recipe passes the package-index installed
+`openluat:luatos-cli` tool directory to `upload_core.ps1`. For development
+worktrees, `upload_core.ps1` still falls back to `tools\luatos-cli-release`
+when that installed tool path is not provided.
 
 Normal AIR780EPM flashing sequence:
 

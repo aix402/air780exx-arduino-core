@@ -10,6 +10,7 @@ tools.air780epm_cli.path={runtime.platform.path}/tools
 tools.air780epm_usb.path={runtime.platform.path}/tools
 tools.air780epm_csdk.path={runtime.tools.air780epm-csdk.path}
 tools.air780epm_gnu_rm.path={runtime.tools.gnu-rm.path}
+tools.air780epm_luatos_cli.path={runtime.tools.luatos-cli.path}
 tools.air780epm_pwsh.cmd=pwsh
 tools.air780epm_usb.cmd=pwsh
 
@@ -36,4 +37,4 @@ recipe.size.regex.eeprom=^\.eeprom\s+([0-9]+)$
 pluggable_discovery.required.0=builtin:serial-discovery
 pluggable_monitor.required.serial=builtin:serial-monitor
 
-tools.air780epm_usb.upload.pattern.windows="{cmd}" -NoProfile -ExecutionPolicy Bypass -File "{path}/upload_core.ps1" -ComPort "{serial.port}" -PackageFile "{build.path}/{build.project_name}.binpkg" -SocFile "{build.path}/{build.project_name}_ec718pm.soc"
+tools.air780epm_usb.upload.pattern.windows="{cmd}" -NoProfile -ExecutionPolicy Bypass -File "{path}/upload_core.ps1" -ComPort "{serial.port}" -PackageFile "{build.path}/{build.project_name}.binpkg" -SocFile "{build.path}/{build.project_name}_ec718pm.soc" -LuatOSCliToolRoot:"{tools.air780epm_luatos_cli.path}"

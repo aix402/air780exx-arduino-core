@@ -4,6 +4,7 @@ param(
     [string]$PackageFile = ".\runner\air780epm_runner\out\air780epm_runner.binpkg",
     [string]$SocFile = ".\runner\air780epm_runner\out\air780epm_runner_ec718pm.soc",
     [string]$LuatoolsPath = "F:\hezhou\luatools\Luatools_v3.exe",
+    [string]$LuatOSCliToolRoot,
     [string]$LuatOSCliPath = ".\tools\luatos-cli-release\luatos-cli.exe",
     [string]$LuatOSCliSourcePath = ".\tools\luatos-cli\target\release\luatos-cli.exe"
 )
@@ -22,7 +23,11 @@ function Resolve-RepoPath {
 
 $packageFullPath = Resolve-RepoPath -Path $PackageFile
 $socFullPath = Resolve-RepoPath -Path $SocFile
-$cliCandidates = foreach ($candidate in @($LuatOSCliPath, $LuatOSCliSourcePath)) {
+$cliCandidates = @()
+if (-not [string]::IsNullOrWhiteSpace($LuatOSCliToolRoot) -and -not $LuatOSCliToolRoot.Contains("{")) {
+    $cliCandidates += (Join-Path $LuatOSCliToolRoot "luatos-cli.exe")
+}
+$cliCandidates += foreach ($candidate in @($LuatOSCliPath, $LuatOSCliSourcePath)) {
     if ([System.IO.Path]::IsPathRooted($candidate)) {
         $candidate
     }
@@ -41,6 +46,9 @@ if ($null -ne $cliFullPath) {
 }
 
 Write-Output "luatos-cli executable was not found."
+if (-not [string]::IsNullOrWhiteSpace($LuatOSCliToolRoot)) {
+    Write-Output "Arduino tool root: $LuatOSCliToolRoot"
+}
 Write-Output "Install release build: powershell -ExecutionPolicy Bypass -File .\scripts\install_luatos_cli_release.ps1"
 Write-Output "Package file: $packageFullPath"
 Write-Output "Manual fallback: open $LuatoolsPath and flash the package on COM3."
