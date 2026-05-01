@@ -6,8 +6,8 @@ build.core=air780epm
 archive_file=core.a
 compiler.libraries.ldflags=
 
-tools.air780epm_cli.path={runtime.platform.path}/../../../scripts
-tools.air780epm_usb.path={runtime.platform.path}/../../../scripts
+tools.air780epm_cli.path={runtime.platform.path}/tools
+tools.air780epm_usb.path={runtime.platform.path}/tools
 tools.air780epm_csdk.path={runtime.tools.air780epm-csdk.path}
 tools.air780epm_gnu_rm.path={runtime.tools.gnu-rm.path}
 tools.air780epm_pwsh.cmd=pwsh

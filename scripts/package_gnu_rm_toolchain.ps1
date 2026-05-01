@@ -2,6 +2,7 @@ param(
     [string]$ManifestPath,
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version = "10.2.1-ec718",
+    [string]$ToolArchiveRoot = "gnu-rm",
     [switch]$Clean
 )
 
@@ -70,11 +71,28 @@ if (Test-Path -LiteralPath $toolchainPackageManifest -PathType Leaf) {
 }
 
 try {
-    $archiveItems = @(Get-ChildItem -LiteralPath $toolchainRoot -Force | ForEach-Object { $_.FullName })
-    if ($archiveItems.Count -eq 0) {
-        throw "Toolchain directory is empty: $toolchainRoot"
+    if ([string]::IsNullOrWhiteSpace($ToolArchiveRoot)) {
+        throw "ToolArchiveRoot must not be empty."
     }
-    Compress-Archive -LiteralPath $archiveItems -DestinationPath $zipPath -CompressionLevel Optimal
+    $stagingRoot = Join-Path $repoRoot ".tmp_gnu_rm_tool_package"
+    $stagingToolRoot = Join-Path $stagingRoot $ToolArchiveRoot
+    if (Test-Path -LiteralPath $stagingRoot) {
+        Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path $stagingToolRoot | Out-Null
+    try {
+        Get-ChildItem -LiteralPath $toolchainRoot -Force | Where-Object {
+            $_.FullName -ne $toolchainPackageManifest
+        } | ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination $stagingToolRoot -Recurse -Force
+        }
+        Compress-Archive -LiteralPath $stagingToolRoot -DestinationPath $zipPath -CompressionLevel Optimal
+    }
+    finally {
+        if (Test-Path -LiteralPath $stagingRoot) {
+            Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+        }
+    }
 }
 finally {
     if ($tempManifestBackup -and (Test-Path -LiteralPath $tempManifestBackup -PathType Leaf)) {
@@ -95,7 +113,8 @@ $releaseManifest = [ordered]@{
     version = $Version
     generated_at = (Get-Date).ToString("o")
     tool_name = "gnu-rm"
-    archive_layout = "ToolRoot"
+    archive_layout = "ArduinoTool"
+    tool_archive_root = $ToolArchiveRoot
     archive = [System.IO.Path]::GetRelativePath($repoRoot, $zipPath)
     archive_size_bytes = [Int64]$zipInfo.Length
     sha256 = $hash

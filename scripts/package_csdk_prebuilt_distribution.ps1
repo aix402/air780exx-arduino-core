@@ -4,6 +4,7 @@ param(
     [string]$Version,
     [ValidateSet("Directory", "ToolRoot")]
     [string]$ArchiveLayout = "Directory",
+    [string]$ToolArchiveRoot = "air780epm-csdk",
     [switch]$Clean
 )
 
@@ -128,11 +129,26 @@ if ($ArchiveLayout -eq "Directory") {
     }
 }
 else {
-    $archiveItems = @(Get-ChildItem -LiteralPath $distributionRoot -Force | ForEach-Object { $_.FullName })
-    if ($archiveItems.Count -eq 0) {
-        throw "Distribution directory is empty: $distributionRoot"
+    if ([string]::IsNullOrWhiteSpace($ToolArchiveRoot)) {
+        throw "ToolArchiveRoot must not be empty for ToolRoot archives."
     }
-    Compress-Archive -LiteralPath $archiveItems -DestinationPath $zipPath -CompressionLevel Optimal
+    $stagingRoot = Join-Path $repoRoot ".tmp_csdk_tool_package"
+    $stagingToolRoot = Join-Path $stagingRoot $ToolArchiveRoot
+    if (Test-Path -LiteralPath $stagingRoot) {
+        Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path $stagingToolRoot | Out-Null
+    try {
+        Get-ChildItem -LiteralPath $distributionRoot -Force | ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination $stagingToolRoot -Recurse -Force
+        }
+        Compress-Archive -LiteralPath $stagingToolRoot -DestinationPath $zipPath -CompressionLevel Optimal
+    }
+    finally {
+        if (Test-Path -LiteralPath $stagingRoot) {
+            Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+        }
+    }
 }
 
 $zipInfo = Get-Item -LiteralPath $zipPath
@@ -147,6 +163,7 @@ $releaseManifest = [ordered]@{
     git_commit = $commit
     distribution_directory = Get-RepoRelativePath $distributionRoot
     archive_layout = $ArchiveLayout
+    tool_archive_root = if ($ArchiveLayout -eq "ToolRoot") { $ToolArchiveRoot } else { $null }
     distribution_size_bytes = [Int64]$distributionSizeBytes
     archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length

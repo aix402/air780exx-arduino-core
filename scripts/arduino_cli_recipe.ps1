@@ -16,6 +16,62 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 
+function Normalize-ArduinoCliRecipeArgument {
+    param([AllowNull()][string]$Value)
+
+    if ($null -eq $Value) {
+        return $Value
+    }
+
+    $normalized = $Value.Trim()
+    $normalized = $normalized.Replace('\"', '"')
+    if ($normalized.Length -ge 2 -and $normalized.StartsWith('"') -and $normalized.EndsWith('"')) {
+        $normalized = $normalized.Substring(1, $normalized.Length - 2)
+    }
+    return $normalized
+}
+
+function Import-ArduinoCliRecipeRemainingArgs {
+    foreach ($arg in @($RemainingArgs)) {
+        if ([string]::IsNullOrWhiteSpace($arg) -or -not $arg.StartsWith("-", [System.StringComparison]::Ordinal)) {
+            continue
+        }
+
+        $separator = $arg.IndexOf(":")
+        if ($separator -lt 0) {
+            $separator = $arg.IndexOf("=")
+        }
+        if ($separator -lt 0) {
+            continue
+        }
+
+        $name = $arg.Substring(1, $separator - 1)
+        $value = Normalize-ArduinoCliRecipeArgument $arg.Substring($separator + 1)
+        switch ($name.ToLowerInvariant()) {
+            "csdktoolroot" {
+                if ([string]::IsNullOrWhiteSpace($script:CsdkToolRoot)) {
+                    $script:CsdkToolRoot = $value
+                }
+            }
+            "toolchainroot" {
+                if ([string]::IsNullOrWhiteSpace($script:ToolchainRoot)) {
+                    $script:ToolchainRoot = $value
+                }
+            }
+            "extraflags" {
+                if ([string]::IsNullOrWhiteSpace($script:ExtraFlags)) {
+                    $script:ExtraFlags = $value
+                }
+            }
+        }
+    }
+}
+
+Import-ArduinoCliRecipeRemainingArgs
+$CsdkToolRoot = Normalize-ArduinoCliRecipeArgument $CsdkToolRoot
+$ToolchainRoot = Normalize-ArduinoCliRecipeArgument $ToolchainRoot
+$ExtraFlags = Normalize-ArduinoCliRecipeArgument $ExtraFlags
+
 function Test-UsableToolRoot {
     param([AllowNull()][string]$Path)
 
