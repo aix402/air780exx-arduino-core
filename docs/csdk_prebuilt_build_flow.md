@@ -84,6 +84,34 @@ The package currently includes:
 
 The manifest is the contract consumed by the Arduino recipes. It records compiler paths, flags, include directories, link directories, link groups, package inputs, and output rules.
 
+## Boards Manager Package Shape
+
+The release candidate is split into three Arduino package-index artifacts:
+
+- `openluat:ec718pm`: the Arduino platform archive.
+- `openluat:air780epm-csdk`: the CSDK/runner ABI tool archive.
+- `openluat:gnu-rm`: the GNU Arm Embedded toolchain archive.
+
+The platform archive contains:
+
+- `platform.txt` and `boards.txt`.
+- `cores\air780epm`.
+- `variants\air780epm_dev`.
+- platform-local recipe/upload/helper scripts under `tools`.
+- bundled platform examples under `examples`.
+- bundled AIR780EPM helper libraries under `libraries`.
+
+The tool archives must use a single short top-level directory in the zip. Arduino CLI strips that directory while installing the tool. The CSDK tool archive currently uses `air780epm-csdk`; the GNU Arm tool archive uses `gnu-rm`.
+
+The package-index draft is generated with:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate_package_index_draft.ps1 `
+  -BaseUrl https://example.com/openluat/arduino/releases
+```
+
+Before publishing, replace the draft base URL with the real release URL and upload all three archives listed by the generated index.
+
 ## Arduino CLI Compile Mode
 
 Arduino CLI reads `core\air780epm\platform.txt`.
@@ -350,6 +378,16 @@ The package script writes three release artifacts under `dist\releases`:
 By default `<version>` is derived from the current Git branch and short commit.
 Pass `-Version <name>` when cutting a named release.
 
+Package-index install acceptance:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean
+```
+
+This starts a local HTTP server for `dist\releases`, generates a package-index draft, installs `openluat:ec718pm` into an isolated Arduino15-like data directory under `%LOCALAPPDATA%\Arduino15-air780-smoke`, and compiles both `Blink` and `ComplexLibraryProbe`.
+
+The verification intentionally uses a path shaped like a normal Windows Arduino15 install. A much deeper worktree-local data path can make GNU Arm Embedded 10.2.1 fail to find its C++ multilib header `bits\c++config.h`; the Arduino15-like smoke path has been verified to avoid that failure.
+
 Distribution hardware acceptance:
 
 ```powershell
@@ -370,6 +408,8 @@ Verified in this experiment:
 - `ArduinoJsonProbe` software build with a real header-only Arduino library.
 - Distribution package build with bundled toolchain.
 - Distribution-built `ComplexLibraryProbe` hardware flash and runtime log.
+- Boards Manager-style package-index install into an isolated Arduino15-like directory.
+- Package-index-installed `Blink` and `ComplexLibraryProbe` compile/package outputs.
 
 ## Key Constraints
 

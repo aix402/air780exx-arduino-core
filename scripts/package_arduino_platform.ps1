@@ -1,5 +1,7 @@
 param(
     [string]$PlatformDirectory = ".\core\air780epm",
+    [string]$ExamplesDirectory = ".\examples",
+    [string]$LibrariesDirectory = ".\libraries",
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version = "0.1.0",
     [string]$PlatformArchiveRoot = "ec718pm",
@@ -51,6 +53,8 @@ function Get-RepoRelativePath {
 }
 
 $platformRoot = Resolve-RepoPath $PlatformDirectory
+$examplesRoot = Resolve-RepoPath $ExamplesDirectory
+$librariesRoot = Resolve-RepoPath $LibrariesDirectory
 $outputRoot = Resolve-RepoPath $OutputDirectory
 Assert-File -Path (Join-Path $platformRoot "platform.txt") -Description "Arduino platform.txt"
 Assert-File -Path (Join-Path $platformRoot "boards.txt") -Description "Arduino boards.txt"
@@ -100,6 +104,12 @@ try {
     Get-ChildItem -LiteralPath $platformRoot -Force | ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination $stagingPlatformRoot -Recurse -Force
     }
+    if (Test-Path -LiteralPath $examplesRoot -PathType Container) {
+        Copy-Item -LiteralPath $examplesRoot -Destination (Join-Path $stagingPlatformRoot "examples") -Recurse -Force
+    }
+    if (Test-Path -LiteralPath $librariesRoot -PathType Container) {
+        Copy-Item -LiteralPath $librariesRoot -Destination (Join-Path $stagingPlatformRoot "libraries") -Recurse -Force
+    }
     foreach ($scriptName in $platformToolScripts) {
         Copy-Item -LiteralPath (Join-Path $repoRoot "scripts\$scriptName") -Destination (Join-Path $stagingPlatformRoot "tools\$scriptName") -Force
     }
@@ -123,6 +133,8 @@ $releaseManifest = [ordered]@{
     git_branch = Get-GitValue -Arguments @("branch", "--show-current")
     git_commit = Get-GitValue -Arguments @("rev-parse", "HEAD")
     platform_directory = Get-RepoRelativePath $platformRoot
+    examples_directory = if (Test-Path -LiteralPath $examplesRoot -PathType Container) { Get-RepoRelativePath $examplesRoot } else { $null }
+    libraries_directory = if (Test-Path -LiteralPath $librariesRoot -PathType Container) { Get-RepoRelativePath $librariesRoot } else { $null }
     platform_archive_root = $PlatformArchiveRoot
     archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length
