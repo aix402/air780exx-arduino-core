@@ -4,6 +4,7 @@ param(
     [string]$ProjectName = "air780epm_runner",
     [string]$SketchPath,
     [string]$ManifestPath,
+    [string]$ToolchainRoot,
     [switch]$RefreshPrebuild,
     [switch]$Clean
 )
@@ -37,7 +38,32 @@ function Read-Manifest {
 
     $manifest = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
     $manifestRoot = Split-Path -Parent ([System.IO.Path]::GetFullPath($Path))
-    return Resolve-ManifestPaths -Manifest $manifest -BaseRoot $manifestRoot
+    $manifest = Resolve-ManifestPaths -Manifest $manifest -BaseRoot $manifestRoot
+    return Set-ManifestToolchainRoot -Manifest $manifest -ToolchainRoot $ToolchainRoot
+}
+
+function Set-ManifestToolchainRoot {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [AllowNull()][string]$ToolchainRoot
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ToolchainRoot)) {
+        return $Manifest
+    }
+
+    $toolchainFullRoot = [System.IO.Path]::GetFullPath($ToolchainRoot)
+    $toolchainBin = Join-Path $toolchainFullRoot "bin"
+    $Manifest.toolchain = [PSCustomObject][ordered]@{
+        bin = $toolchainBin
+        cc = Join-Path $toolchainBin "arm-none-eabi-gcc.exe"
+        cxx = Join-Path $toolchainBin "arm-none-eabi-g++.exe"
+        ar = Join-Path $toolchainBin "arm-none-eabi-gcc-ar.exe"
+        objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy.exe"
+        objdump = Join-Path $toolchainBin "arm-none-eabi-objdump.exe"
+        size = Join-Path $toolchainBin "arm-none-eabi-size.exe"
+    }
+    return $Manifest
 }
 
 function Resolve-ManifestPathValue {
@@ -280,6 +306,7 @@ $directLinkDir = Join-Path $buildFullPath "direct-link"
     -ManifestPath $manifestFullPath `
     -ProjectName $project `
     -OutputDirectory $directLinkDir `
+    -ToolchainRoot $ToolchainRoot `
     -Package
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE

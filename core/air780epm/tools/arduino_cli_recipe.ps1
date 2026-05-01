@@ -5,7 +5,12 @@ param(
     [string]$OutputFile,
     [string]$BuildPath,
     [string]$ProjectName,
-    [string]$SketchPath
+    [string]$SketchPath,
+    [string]$CsdkToolRoot,
+    [string]$ToolchainRoot,
+    [string]$ExtraFlags,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$RemainingArgs
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,5 +40,9 @@ if (-not (Test-Path -LiteralPath $recipeScript)) {
     -OutputFile $OutputFile `
     -BuildPath $BuildPath `
     -ProjectName $ProjectName `
-    -SketchPath $SketchPath
+    -SketchPath $SketchPath `
+    -CsdkToolRoot $CsdkToolRoot `
+    -ToolchainRoot $ToolchainRoot `
+    -ExtraFlags $ExtraFlags `
+    @RemainingArgs
 exit $LASTEXITCODE

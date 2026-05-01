@@ -1,6 +1,7 @@
 param(
     [string]$ManifestPath,
     [string]$OutputDirectory = ".\dist\csdk-prebuilt-air780epm",
+    [switch]$NoToolchain,
     [switch]$Clean
 )
 
@@ -470,32 +471,56 @@ foreach ($file in $files) {
     Copy-FileToDestination -Source $file -Destination (Join-Path $distributionPackageDirectory (Split-Path -Leaf $file))
 }
 
-$toolchainBin = Get-FullPath $manifest.toolchain.bin
-$toolchainRoot = Get-FullPath (Join-Path $toolchainBin "..")
 $distributionToolchainRoot = Join-Path $outputFullDirectory "toolchain\gnu-rm"
-Copy-DirectoryToDestination -Source $toolchainRoot -Destination $distributionToolchainRoot
-$toolchainPackageManifest = Join-Path $distributionToolchainRoot "manifest.txt"
-if (Test-Path -LiteralPath $toolchainPackageManifest -PathType Leaf) {
-    Remove-Item -LiteralPath $toolchainPackageManifest -Force
-}
 $distributionToolchainBin = Join-Path $distributionToolchainRoot "bin"
+if (-not $NoToolchain) {
+    $toolchainBin = Get-FullPath $manifest.toolchain.bin
+    $toolchainRoot = Get-FullPath (Join-Path $toolchainBin "..")
+    Copy-DirectoryToDestination -Source $toolchainRoot -Destination $distributionToolchainRoot
+    $toolchainPackageManifest = Join-Path $distributionToolchainRoot "manifest.txt"
+    if (Test-Path -LiteralPath $toolchainPackageManifest -PathType Leaf) {
+        Remove-Item -LiteralPath $toolchainPackageManifest -Force
+    }
+}
 
 $distributionManifest = ConvertTo-DistributionValue `
     -Value $manifest `
     -SourceRoot $sourceRepoRoot `
     -DestinationRoot $outputFullDirectory
-$distributionManifest["toolchain"] = [ordered]@{
-    bin = $distributionToolchainBin
-    cc = (Join-Path $distributionToolchainBin "arm-none-eabi-gcc.exe")
-    cxx = (Join-Path $distributionToolchainBin "arm-none-eabi-g++.exe")
-    ar = (Join-Path $distributionToolchainBin "arm-none-eabi-gcc-ar.exe")
-    objcopy = (Join-Path $distributionToolchainBin "arm-none-eabi-objcopy.exe")
-    objdump = (Join-Path $distributionToolchainBin "arm-none-eabi-objdump.exe")
-    size = (Join-Path $distributionToolchainBin "arm-none-eabi-size.exe")
+$distributionManifest["toolchain"] = if ($NoToolchain) {
+    [ordered]@{
+        source = "external-tool"
+        tool_name = "gnu-rm"
+        version = "10.2.1-ec718"
+        bin = $null
+        cc = $null
+        cxx = $null
+        ar = $null
+        objcopy = $null
+        objdump = $null
+        size = $null
+    }
+}
+else {
+    [ordered]@{
+        source = "bundled"
+        bin = $distributionToolchainBin
+        cc = (Join-Path $distributionToolchainBin "arm-none-eabi-gcc.exe")
+        cxx = (Join-Path $distributionToolchainBin "arm-none-eabi-g++.exe")
+        ar = (Join-Path $distributionToolchainBin "arm-none-eabi-gcc-ar.exe")
+        objcopy = (Join-Path $distributionToolchainBin "arm-none-eabi-objcopy.exe")
+        objdump = (Join-Path $distributionToolchainBin "arm-none-eabi-objdump.exe")
+        size = (Join-Path $distributionToolchainBin "arm-none-eabi-size.exe")
+    }
 }
 $distributionManifest["distribution_package"] = $true
 $distributionManifest["distribution_source_manifest"] = [System.IO.Path]::GetRelativePath($repoRoot, $manifestFullPath)
-$distributionManifest["distribution_copy_policy"] = "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain"
+$distributionManifest["distribution_copy_policy"] = if ($NoToolchain) {
+    "generated-linker-mem-map-reduced-headers-required-link-libraries-external-toolchain"
+}
+else {
+    "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain"
+}
 $distributionManifest["repo_root"] = $outputFullDirectory
 $distributionManifest["csdk_root"] = $null
 $distributionManifest["link"]["link_dirs"] = @($distributionLibDirectory)

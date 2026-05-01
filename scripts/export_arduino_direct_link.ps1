@@ -5,6 +5,7 @@ param(
     [string]$ProjectName = "air780epm_runner",
     [string]$OutputDirectory,
     [string]$SevenZipPath,
+    [string]$ToolchainRoot,
     [switch]$Execute,
     [switch]$Package
 )
@@ -86,6 +87,30 @@ function Resolve-ManifestPaths {
                 $Manifest.package.$propertyName = Resolve-ManifestPathValue -Value $Manifest.package.$propertyName -BaseRoot $BaseRoot
             }
         }
+    }
+    return $Manifest
+}
+
+function Set-ManifestToolchainRoot {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [AllowNull()][string]$ToolchainRoot
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ToolchainRoot)) {
+        return $Manifest
+    }
+
+    $toolchainFullRoot = [System.IO.Path]::GetFullPath($ToolchainRoot)
+    $toolchainBin = Join-Path $toolchainFullRoot "bin"
+    $Manifest.toolchain = [PSCustomObject][ordered]@{
+        bin = $toolchainBin
+        cc = Join-Path $toolchainBin "arm-none-eabi-gcc.exe"
+        cxx = Join-Path $toolchainBin "arm-none-eabi-g++.exe"
+        ar = Join-Path $toolchainBin "arm-none-eabi-gcc-ar.exe"
+        objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy.exe"
+        objdump = Join-Path $toolchainBin "arm-none-eabi-objdump.exe"
+        size = Join-Path $toolchainBin "arm-none-eabi-size.exe"
     }
     return $Manifest
 }
@@ -264,6 +289,7 @@ $manifestFullPath = Get-FullPath $ManifestPath
 Assert-File -Path $manifestFullPath -Description "Arduino/CSDK export manifest"
 $manifest = Get-Content -Raw -LiteralPath $manifestFullPath | ConvertFrom-Json
 $manifest = Resolve-ManifestPaths -Manifest $manifest -BaseRoot (Split-Path -Parent $manifestFullPath)
+$manifest = Set-ManifestToolchainRoot -Manifest $manifest -ToolchainRoot $ToolchainRoot
 $isDistributionPackage = ($manifest.PSObject.Properties.Name -contains "distribution_package") -and [bool]$manifest.distribution_package
 
 $sketchObjectDir = Join-Path $buildFullPath "sketch"

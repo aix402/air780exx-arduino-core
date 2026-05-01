@@ -1,6 +1,8 @@
 param(
     [switch]$CliVerbose,
-    [switch]$Clean
+    [switch]$Clean,
+    [switch]$NoToolchain,
+    [string]$ToolchainRoot
 )
 
 $ErrorActionPreference = "Stop"
@@ -84,6 +86,9 @@ function Invoke-DistributionCompile {
     }
 
     $env:AIR780EPM_ARDUINO_MANIFEST_PATH = $distributionManifest
+    if (-not [string]::IsNullOrWhiteSpace($ToolchainRoot)) {
+        $env:AIR780EPM_GNU_RM_TOOL_ROOT = $ToolchainRoot
+    }
     try {
         & pwsh @compileArgs
         if ($LASTEXITCODE -ne 0) {
@@ -92,6 +97,7 @@ function Invoke-DistributionCompile {
     }
     finally {
         Remove-Item Env:\AIR780EPM_ARDUINO_MANIFEST_PATH -ErrorAction SilentlyContinue
+        Remove-Item Env:\AIR780EPM_GNU_RM_TOOL_ROOT -ErrorAction SilentlyContinue
     }
 
     $buildPath = Resolve-RepoPath ".arduino-cli-work\$BuildName"
@@ -113,6 +119,9 @@ $exportArgs = @(
 if ($Clean) {
     $exportArgs += "-Clean"
 }
+if ($NoToolchain) {
+    $exportArgs += "-NoToolchain"
+}
 & pwsh @exportArgs
 if ($LASTEXITCODE -ne 0) {
     throw "CSDK prebuilt distribution export failed with exit code $LASTEXITCODE"
@@ -130,7 +139,13 @@ $manifest = $manifestText | ConvertFrom-Json
 if (-not [bool]$manifest.distribution_package) {
     throw "Distribution manifest is missing distribution_package=true"
 }
-if ([string]$manifest.distribution_copy_policy -ne "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain") {
+$expectedCopyPolicy = if ($NoToolchain) {
+    "generated-linker-mem-map-reduced-headers-required-link-libraries-external-toolchain"
+}
+else {
+    "generated-linker-mem-map-reduced-headers-required-link-libraries-and-toolchain"
+}
+if ([string]$manifest.distribution_copy_policy -ne $expectedCopyPolicy) {
     throw "Distribution manifest has unexpected copy policy: $($manifest.distribution_copy_policy)"
 }
 Assert-File -Path (Resolve-DistributionManifestPath ([string]$manifest.link.preprocessed_linker_script)) -Description "Distribution preprocessed linker script"
@@ -188,20 +203,33 @@ foreach ($relativeNetworkHeader in @(
         throw "Distribution should not ship SDK network-private header: $relativeNetworkHeader"
     }
 }
-$toolchainPaths = @($manifest.toolchain.bin, $manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size) | ForEach-Object {
-    Resolve-DistributionManifestPath ([string]$_)
-}
-foreach ($toolPath in $toolchainPaths) {
-    if (-not ([string]$toolPath).StartsWith($distributionRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Distribution toolchain path is outside distribution root: $toolPath"
+if ($NoToolchain) {
+    if ([string]$manifest.toolchain.source -ne "external-tool") {
+        throw "Distribution manifest should declare external toolchain source"
     }
-    if ([string]$toolPath -match '\\.xmake\\') {
-        throw "Distribution toolchain path still references xmake cache: $toolPath"
+    if (Test-Path -LiteralPath (Join-Path $distributionRoot "toolchain") -PathType Container) {
+        throw "Distribution should not ship toolchain when -NoToolchain is set"
+    }
+    if ([string]::IsNullOrWhiteSpace($ToolchainRoot)) {
+        throw "-ToolchainRoot is required when verifying -NoToolchain distribution"
     }
 }
-Assert-Directory -Path (Resolve-DistributionManifestPath ([string]$manifest.toolchain.bin)) -Description "Distribution toolchain bin directory"
-foreach ($toolPath in @($manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size)) {
-    Assert-File -Path (Resolve-DistributionManifestPath ([string]$toolPath)) -Description "Distribution toolchain file"
+else {
+    $toolchainPaths = @($manifest.toolchain.bin, $manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size) | ForEach-Object {
+        Resolve-DistributionManifestPath ([string]$_)
+    }
+    foreach ($toolPath in $toolchainPaths) {
+        if (-not ([string]$toolPath).StartsWith($distributionRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "Distribution toolchain path is outside distribution root: $toolPath"
+        }
+        if ([string]$toolPath -match '\\.xmake\\') {
+            throw "Distribution toolchain path still references xmake cache: $toolPath"
+        }
+    }
+    Assert-Directory -Path (Resolve-DistributionManifestPath ([string]$manifest.toolchain.bin)) -Description "Distribution toolchain bin directory"
+    foreach ($toolPath in @($manifest.toolchain.cc, $manifest.toolchain.cxx, $manifest.toolchain.ar, $manifest.toolchain.objcopy, $manifest.toolchain.objdump, $manifest.toolchain.size)) {
+        Assert-File -Path (Resolve-DistributionManifestPath ([string]$toolPath)) -Description "Distribution toolchain file"
+    }
 }
 
 $distributionSizeBytes = (Get-ChildItem -LiteralPath $distributionRoot -Recurse -File | Measure-Object -Property Length -Sum).Sum
