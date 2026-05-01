@@ -15,14 +15,24 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+
+function Test-UsableToolRoot {
+    param([AllowNull()][string]$Path)
+
+    return -not [string]::IsNullOrWhiteSpace($Path) -and
+        -not $Path.Contains("{") -and
+        -not $Path.Contains("}") -and
+        (Test-Path -LiteralPath $Path -PathType Container)
+}
+
 $defaultManifestPath = Join-Path $repoRoot "runner\air780epm_runner\build\arduino_export_manifest.json"
 if (-not [string]::IsNullOrWhiteSpace($env:AIR780EPM_ARDUINO_MANIFEST_PATH)) {
     $defaultManifestPath = [System.IO.Path]::GetFullPath($env:AIR780EPM_ARDUINO_MANIFEST_PATH)
 }
-elseif (-not [string]::IsNullOrWhiteSpace($CsdkToolRoot)) {
+elseif (Test-UsableToolRoot $CsdkToolRoot) {
     $defaultManifestPath = [System.IO.Path]::GetFullPath((Join-Path $CsdkToolRoot "arduino_export_manifest.json"))
 }
-elseif (-not [string]::IsNullOrWhiteSpace($env:AIR780EPM_CSDK_TOOL_ROOT)) {
+elseif (Test-UsableToolRoot $env:AIR780EPM_CSDK_TOOL_ROOT) {
     $defaultManifestPath = [System.IO.Path]::GetFullPath((Join-Path $env:AIR780EPM_CSDK_TOOL_ROOT "arduino_export_manifest.json"))
 }
 
@@ -50,10 +60,10 @@ function Get-ArduinoBuildManifest {
 }
 
 function Get-RequestedToolchainRoot {
-    if (-not [string]::IsNullOrWhiteSpace($ToolchainRoot)) {
+    if (Test-UsableToolRoot $ToolchainRoot) {
         return $ToolchainRoot
     }
-    if (-not [string]::IsNullOrWhiteSpace($env:AIR780EPM_GNU_RM_TOOL_ROOT)) {
+    if (Test-UsableToolRoot $env:AIR780EPM_GNU_RM_TOOL_ROOT) {
         return $env:AIR780EPM_GNU_RM_TOOL_ROOT
     }
     return $null
