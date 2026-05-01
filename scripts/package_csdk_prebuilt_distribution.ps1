@@ -2,6 +2,8 @@ param(
     [string]$DistributionDirectory = ".\dist\csdk-prebuilt-air780epm",
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version,
+    [ValidateSet("Directory", "ToolRoot")]
+    [string]$ArchiveLayout = "Directory",
     [switch]$Clean
 )
 
@@ -116,12 +118,21 @@ $distributionSizeBytes = (Get-ChildItem -LiteralPath $distributionRoot -Recurse 
 $archiveParent = Split-Path -Parent $distributionRoot
 $archiveLeaf = Split-Path -Leaf $distributionRoot
 
-Push-Location $archiveParent
-try {
-    Compress-Archive -LiteralPath $archiveLeaf -DestinationPath $zipPath -CompressionLevel Optimal
+if ($ArchiveLayout -eq "Directory") {
+    Push-Location $archiveParent
+    try {
+        Compress-Archive -LiteralPath $archiveLeaf -DestinationPath $zipPath -CompressionLevel Optimal
+    }
+    finally {
+        Pop-Location
+    }
 }
-finally {
-    Pop-Location
+else {
+    $archiveItems = @(Get-ChildItem -LiteralPath $distributionRoot -Force | ForEach-Object { $_.FullName })
+    if ($archiveItems.Count -eq 0) {
+        throw "Distribution directory is empty: $distributionRoot"
+    }
+    Compress-Archive -LiteralPath $archiveItems -DestinationPath $zipPath -CompressionLevel Optimal
 }
 
 $zipInfo = Get-Item -LiteralPath $zipPath
@@ -135,6 +146,7 @@ $releaseManifest = [ordered]@{
     git_branch = $branch
     git_commit = $commit
     distribution_directory = Get-RepoRelativePath $distributionRoot
+    archive_layout = $ArchiveLayout
     distribution_size_bytes = [Int64]$distributionSizeBytes
     archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length
