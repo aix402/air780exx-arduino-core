@@ -336,6 +336,19 @@ In Boards Manager installs, the upload recipe passes the package-index installed
 worktrees, `upload_core.ps1` still falls back to `tools\luatos-cli-release`
 when that installed tool path is not provided.
 
+For normal uploads, pass the currently selected Arduino serial port, for
+example `COM3`. If the board is not running normally and no command/log port is
+available, manually enter Boot/download mode and pass `auto` as the port:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\upload_core.ps1 `
+  -ComPort auto `
+  -SocFile .\.arduino-cli-work\<Sketch>\<Project>_ec718pm.soc
+```
+
+This maps directly to `luatos-cli flash run --port auto`, which detects the
+EC718 download-mode port such as `COM7`.
+
 Normal AIR780EPM flashing sequence:
 
 ```text
