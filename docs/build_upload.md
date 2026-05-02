@@ -9,9 +9,9 @@ AIR780EPM Arduino Core bring-up.
 | --- | --- |
 | Target module | `AIR780EPM` |
 | Chip | `EC718PM` |
-| Arduino package | `openluat:ec718pm` |
+| Arduino package | `air780:air780` |
 | Board ID | `air780epm_dev` |
-| FQBN | `openluat:ec718pm:air780epm_dev` |
+| FQBN | `air780:air780:air780epm_dev` |
 | Core build backend | LuatOS CSDK `xmake` runner |
 | Flash tool | `luatos-cli` release build |
 | Manual fallback | `F:\hezhou\luatools\Luatools_v3.exe` |

@@ -1,7 +1,7 @@
 param(
     [ValidateSet("smoke", "pinmap_contract", "sensor_io", "connectivity", "storage")]
     [string]$Profile = "smoke",
-    [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
+    [string]$Fqbn = "air780:air780:air780epm_dev",
     [string]$ComPort,
     [string]$LogPort = "auto",
     [int]$VerifyDuration = 15,

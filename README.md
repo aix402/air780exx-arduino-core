@@ -1,4 +1,4 @@
-# AIR780EXX Arduino Core
+# AIR780 Arduino Core
 
 Arduino Core porting workspace for OpenLuat AIR780Ex modules.
 
@@ -153,7 +153,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_setup.ps1
 This creates the local FQBN:
 
 ```text
-openluat:ec718pm:air780epm_dev
+air780:air780:air780epm_dev
 ```
 
 The default setup uses the project-local Arduino CLI executable and

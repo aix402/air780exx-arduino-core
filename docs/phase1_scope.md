@@ -84,7 +84,7 @@ Verified on AIR780EPM over USB, using COM3 for flashing:
 - `luatos-cli log view-binary --port auto --probe` decodes EC718 logs and
   auto-detects COM3 as the binary log port.
 - Arduino CLI can compile and upload `examples\01.Basics\Blink` through FQBN
-  `openluat:ec718pm:air780epm_dev`.
+  `air780:air780:air780epm_dev`.
 - Arduino IDE can compile, upload, and run the official Arduino `Blink` example
   on AIR780EPM.
 - Arduino CLI can compile `examples\02.Serial\SerialApiCompile`, covering
@@ -148,11 +148,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\arduino_ide_setup.ps1
 
 The IDE setup script backs up `C:\Users\cu80u\.arduinoIDE\arduino-cli.yaml` and
 sets its sketchbook `directories.user` to this repository, so the IDE can
-discover `hardware\openluat\ec718pm`.
+discover `hardware\air780\air780`.
 
 If the IDE still reports `Platform 'aix402:ec718pm' not found`, the IDE is using
 an old cached board selection. The repository examples include `sketch.yaml`
-profiles bound to `openluat:ec718pm:air780epm_dev`; reopen the sketch or select
+profiles bound to `air780:air780:air780epm_dev`; reopen the sketch or select
 `AIR780EPM Dev Board` again.
 
 Compile:
@@ -176,7 +176,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_log.ps1 -RequirePass
 Arduino IDE validation:
 
 - Board: `AIR780EPM Dev Board`
-- FQBN: `openluat:ec718pm:air780epm_dev`
+- FQBN: `air780:air780:air780epm_dev`
 - Sketch: official Arduino `Blink` example
 - Result: compile, upload, and runtime blink verified on AIR780EPM.
 

@@ -88,10 +88,10 @@ The manifest is the contract consumed by the Arduino recipes. It records compile
 
 The release candidate is split into three Arduino package-index artifacts:
 
-- `openluat:ec718pm`: the Arduino platform archive.
-- `openluat:air780epm-csdk`: the CSDK/runner ABI tool archive.
-- `openluat:gnu-rm`: the GNU Arm Embedded toolchain archive.
-- `openluat:luatos-cli`: the Windows flashing/log tool archive.
+- `air780:air780`: the Arduino platform archive.
+- `air780:air780epm-csdk`: the CSDK/runner ABI tool archive.
+- `air780:gnu-rm`: the GNU Arm Embedded toolchain archive.
+- `air780:luatos-cli`: the Windows flashing/log tool archive.
 
 The platform archive contains:
 
@@ -108,7 +108,7 @@ The package-index draft is generated with:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate_package_index_draft.ps1 `
-  -BaseUrl https://example.com/openluat/arduino/releases
+  -BaseUrl https://example.com/air780/arduino/releases
 ```
 
 Before publishing, replace the draft base URL with the real release URL and upload all archives listed by the generated index.
@@ -332,7 +332,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\upload_core.ps1 `
 ```
 
 In Boards Manager installs, the upload recipe passes the package-index installed
-`openluat:luatos-cli` tool directory to `upload_core.ps1`. For development
+`air780:luatos-cli` tool directory to `upload_core.ps1`. For development
 worktrees, `upload_core.ps1` still falls back to `tools\luatos-cli-release`
 when that installed tool path is not provided.
 
@@ -401,7 +401,7 @@ Package-index install acceptance:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean
 ```
 
-This starts a local HTTP server for `dist\releases`, generates a package-index draft, installs `openluat:ec718pm` into an isolated Arduino15-like data directory under `%LOCALAPPDATA%\Arduino15-air780-smoke`, and compiles both `Blink` and `ComplexLibraryProbe`.
+This starts a local HTTP server for `dist\releases`, generates a package-index draft, installs `air780:air780` into an isolated Arduino15-like data directory under `%LOCALAPPDATA%\Arduino15-air780-smoke`, and compiles both `Blink` and `ComplexLibraryProbe`.
 
 The verification intentionally uses a path shaped like a normal Windows Arduino15 install. A much deeper worktree-local data path can make GNU Arm Embedded 10.2.1 fail to find its C++ multilib header `bits\c++config.h`; the Arduino15-like smoke path has been verified to avoid that failure.
 

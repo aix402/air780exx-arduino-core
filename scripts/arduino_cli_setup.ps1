@@ -1,6 +1,6 @@
 param(
-    [string]$PackageName = "openluat",
-    [string]$Architecture = "ec718pm",
+    [string]$PackageName = "air780",
+    [string]$Architecture = "air780",
     [switch]$UseSystemData
 )
 

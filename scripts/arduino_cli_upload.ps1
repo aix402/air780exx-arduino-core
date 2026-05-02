@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SketchPath,
     [string]$ComPort = "COM3",
-    [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
+    [string]$Fqbn = "air780:air780:air780epm_dev",
     [switch]$Clean
 )
 

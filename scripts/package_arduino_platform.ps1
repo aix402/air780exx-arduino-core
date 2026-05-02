@@ -4,7 +4,7 @@ param(
     [string]$LibrariesDirectory = ".\libraries",
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version = "0.1.0",
-    [string]$PlatformArchiveRoot = "ec718pm",
+    [string]$PlatformArchiveRoot = "air780",
     [switch]$Clean
 )
 
@@ -76,7 +76,7 @@ if (-not (Test-Path -LiteralPath $outputRoot -PathType Container)) {
     New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 }
 
-$archiveBaseName = "air780exx-arduino-platform-ec718pm-$Version"
+$archiveBaseName = "air780-arduino-platform-$Version"
 $zipPath = Join-Path $outputRoot "$archiveBaseName.zip"
 $shaPath = Join-Path $outputRoot "$archiveBaseName.zip.sha256"
 $manifestPath = Join-Path $outputRoot "$archiveBaseName.manifest.json"

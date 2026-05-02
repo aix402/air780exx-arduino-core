@@ -1,6 +1,6 @@
 param(
     [string[]]$Case = @(),
-    [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
+    [string]$Fqbn = "air780:air780:air780epm_dev",
     [string]$ArduinoCliPath = ".\tools\arduino-cli-release\arduino-cli.exe",
     [switch]$Clean,
     [switch]$CliVerbose,

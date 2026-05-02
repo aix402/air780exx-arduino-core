@@ -199,8 +199,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -
 powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "onewire_basic_compile,dallas_temperature_compile,u8g2_ssd1306_compile,adafruit_ssd1306_compile,rtclib_compile,arduino_httpclient_compile,arduino_mqttclient_compile" -Clean -ContinueOnError
 powershell -ExecutionPolicy Bypass -File .\scripts\validate_library_compat.ps1 -Case "arduino_httpclient_runtime_smoke,arduino_mqttclient_runtime_smoke" -Clean -ContinueOnError
 
-& "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\SparkFun_SCD4x_Arduino_Library\examples\Example1_BasicReadings" --build-path ".\.arduino-ide-work\SCD4xBasic" --clean
-& "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b openluat:ec718pm:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\ArduinoJson\examples\JsonGeneratorExample" --build-path ".\.arduino-ide-work\ArduinoJsonGenerator" --clean
+& "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b air780:air780:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\SparkFun_SCD4x_Arduino_Library\examples\Example1_BasicReadings" --build-path ".\.arduino-ide-work\SCD4xBasic" --clean
+& "C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" --config-file "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml" compile -b air780:air780:air780epm_dev "$env:USERPROFILE\Documents\Arduino\libraries\ArduinoJson\examples\JsonGeneratorExample" --build-path ".\.arduino-ide-work\ArduinoJsonGenerator" --clean
 ```
 
 ## Known Gaps

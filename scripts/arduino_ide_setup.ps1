@@ -1,7 +1,7 @@
 param(
     [string]$SketchbookPath = "$env:USERPROFILE\Documents\Arduino",
     [string]$IdeCliConfigPath = "$env:USERPROFILE\.arduinoIDE\arduino-cli.yaml",
-    [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
+    [string]$Fqbn = "air780:air780:air780epm_dev",
     [string]$ComPort = "COM3",
     [switch]$NoBackup
 )
@@ -21,8 +21,8 @@ function Resolve-RepoPath {
 $sketchbookFullPath = Resolve-RepoPath -Path $SketchbookPath
 $configFullPath = Resolve-RepoPath -Path $IdeCliConfigPath
 $platformSource = Join-Path $repoRoot "core\air780epm"
-$platformVendorDir = Join-Path $sketchbookFullPath "hardware\openluat"
-$platformLink = Join-Path $platformVendorDir "ec718pm"
+$platformVendorDir = Join-Path $sketchbookFullPath "hardware\air780"
+$platformLink = Join-Path $platformVendorDir "air780"
 
 if (-not (Test-Path -LiteralPath $sketchbookFullPath)) {
     throw "Sketchbook path does not exist: $sketchbookFullPath"

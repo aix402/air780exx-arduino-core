@@ -1,4 +1,4 @@
-name=AIR780EXX Arduino Core
+name=AIR780 Arduino Core
 version=0.1.0
 category=Contributed
 

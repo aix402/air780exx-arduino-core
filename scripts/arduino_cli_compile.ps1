@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$SketchPath,
-    [string]$Fqbn = "openluat:ec718pm:air780epm_dev",
+    [string]$Fqbn = "air780:air780:air780epm_dev",
     [string]$BuildPath,
     [string]$ArduinoCliPath = ".\tools\arduino-cli-release\arduino-cli.exe",
     [switch]$Clean,

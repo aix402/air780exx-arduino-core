@@ -1,6 +1,6 @@
 param(
-    [string]$OutputPath = ".\dist\releases\package_openluat_ec718pm_index.draft.json",
-    [string]$BaseUrl = "https://example.com/openluat/arduino/releases",
+    [string]$OutputPath = ".\dist\releases\package_air780_index.draft.json",
+    [string]$BaseUrl = "https://example.com/air780/arduino/releases",
     [string]$PlatformArchive,
     [string]$CsdkArchive,
     [string]$GnuRmArchive,
@@ -74,7 +74,7 @@ function New-ToolSystem {
 }
 
 if ([string]::IsNullOrWhiteSpace($PlatformArchive)) {
-    $PlatformArchive = Find-LatestArchive -Pattern "air780exx-arduino-platform-ec718pm-*.zip"
+    $PlatformArchive = Find-LatestArchive -Pattern "air780-arduino-platform-*.zip"
 }
 if ([string]::IsNullOrWhiteSpace($CsdkArchive)) {
     $CsdkArchive = Find-LatestArchive -Pattern "csdk-prebuilt-air780epm-*-notoolchain-toolroot.zip"
@@ -91,8 +91,8 @@ $gnuRm = Get-ArchiveEntry -Path $GnuRmArchive -BaseUrl $BaseUrl
 $luatosCli = Get-ArchiveEntry -Path $LuatOSCliArchive -BaseUrl $BaseUrl
 
 $platform = [ordered]@{
-    name = "AIR780EXX Arduino Core"
-    architecture = "ec718pm"
+    name = "AIR780 Arduino Core"
+    architecture = "air780"
     version = $PlatformVersion
     category = "Contributed"
     help = [ordered]@{
@@ -103,17 +103,17 @@ $platform = [ordered]@{
     )
     toolsDependencies = @(
         [ordered]@{
-            packager = "openluat"
+            packager = "air780"
             name = "air780epm-csdk"
             version = $CsdkVersion
         },
         [ordered]@{
-            packager = "openluat"
+            packager = "air780"
             name = "gnu-rm"
             version = $GnuRmVersion
         },
         [ordered]@{
-            packager = "openluat"
+            packager = "air780"
             name = "luatos-cli"
             version = $LuatOSCliVersion
         }
@@ -128,9 +128,9 @@ foreach ($property in $platformArchiveEntry.GetEnumerator()) {
 $index = [ordered]@{
     packages = @(
         [ordered]@{
-            name = "openluat"
-            maintainer = "OpenLuat"
-            websiteURL = "https://gitee.com/openLuat"
+            name = "air780"
+            maintainer = "AIR780 Arduino Core Contributors"
+            websiteURL = "https://github.com/aix402/air780exx-arduino-core"
             email = ""
             platforms = @($platform)
             tools = @(

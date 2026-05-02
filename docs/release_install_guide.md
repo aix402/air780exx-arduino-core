@@ -5,12 +5,12 @@ This guide describes the first Windows release-candidate package shape.
 ## Scope
 
 - Host OS: Windows.
-- Board package: `openluat:ec718pm`.
+- Board package: `air780:air780`.
 - Board: `AIR780EPM Dev Board`.
 - Tool packages installed by Arduino Boards Manager:
-  - `openluat:air780epm-csdk`
-  - `openluat:gnu-rm`
-  - `openluat:luatos-cli`
+  - `air780:air780epm-csdk`
+  - `air780:gnu-rm`
+  - `air780:luatos-cli`
 
 The normal Arduino build flow compiles sketches, the Arduino core, and Arduino
 libraries with Arduino CLI/IDE recipes, then links against the prebuilt CSDK and
@@ -21,18 +21,18 @@ runner static libraries.
 1. Open Arduino IDE preferences.
 2. Add the published package index URL to Additional Boards Manager URLs.
 3. Open Boards Manager.
-4. Search for `AIR780EXX` or `openluat`.
-5. Install `AIR780EXX Arduino Core`.
+4. Search for `AIR780`.
+5. Install `AIR780 Arduino Core`.
 6. Select `AIR780EPM Dev Board`.
 
 The package index URL must point to the published
-`package_openluat_ec718pm_index.json`. The local
-`package_openluat_ec718pm_index.draft.json` generated during release testing
+`package_air780_index.json`. The local
+`package_air780_index.draft.json` generated during release testing
 uses a temporary `127.0.0.1` URL and is not a publishable URL.
 
 ## Compile
 
-Open `File > Examples > AIR780EXX Arduino Core > 01.Basics > Blink`, then click
+Open `File > Examples > AIR780 Arduino Core > 01.Basics > Blink`, then click
 Verify.
 
 The package manager installation should provide the CSDK ABI package, GNU Arm
@@ -65,7 +65,7 @@ For command-line recovery, use `auto` as the upload port:
 
 ```powershell
 arduino-cli compile `
-  -b openluat:ec718pm:air780epm_dev `
+  -b air780:air780:air780epm_dev `
   --upload `
   -p auto `
   <sketch-path>

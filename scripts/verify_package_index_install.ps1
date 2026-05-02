@@ -52,7 +52,7 @@ function Invoke-SmokeCompile {
     Invoke-ArduinoCli -Arguments @(
         "--config-file", $configPath,
         "compile",
-        "-b", "openluat:ec718pm:air780epm_dev",
+        "-b", "air780:air780:air780epm_dev",
         "--build-path", $buildPath,
         $SketchPath
     )
@@ -112,7 +112,7 @@ try {
     $config = @"
 board_manager:
   additional_urls:
-    - $baseUrl/package_openluat_ec718pm_index.draft.json
+    - $baseUrl/package_air780_index.draft.json
 directories:
   data: $($dataDir.Replace("\", "/"))
   downloads: $($downloadsDir.Replace("\", "/"))
@@ -122,9 +122,9 @@ directories:
 
     Write-Host "==> Install platform from package index"
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "update-index")
-    & $arduinoCliFullPath --config-file $configPath core uninstall openluat:ec718pm 2>$null | Write-Output
-    Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "install", "openluat:ec718pm")
-    $installedLuatOSCli = Join-Path $dataDir "packages\openluat\tools\luatos-cli\1.8.0\luatos-cli.exe"
+    & $arduinoCliFullPath --config-file $configPath core uninstall air780:air780 2>$null | Write-Output
+    Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "install", "air780:air780")
+    $installedLuatOSCli = Join-Path $dataDir "packages\air780\tools\luatos-cli\1.8.0\luatos-cli.exe"
     Assert-File -Path $installedLuatOSCli -Description "package-index installed luatos-cli"
     & $installedLuatOSCli --version | Write-Output
 
