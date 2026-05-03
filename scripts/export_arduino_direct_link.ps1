@@ -4,6 +4,7 @@ param(
     [string]$ManifestPath,
     [string]$ProjectName = "air780epm_runner",
     [string]$OutputDirectory,
+    [string]$CoreArchive,
     [string]$SevenZipPath,
     [string]$ToolchainRoot,
     [switch]$Execute,
@@ -284,6 +285,30 @@ function Find-LinkLibrary {
     return $null
 }
 
+function Find-ArduinoCoreArchive {
+    param(
+        [Parameter(Mandatory = $true)][string]$BuildPath,
+        [string]$PreferredPath
+    )
+
+    $candidatePaths = @()
+    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
+        $candidatePaths += (Get-FullPath $PreferredPath)
+    }
+    $candidatePaths += @(
+        (Join-Path $BuildPath "core.a"),
+        (Join-Path $BuildPath "core\core.a")
+    )
+
+    foreach ($candidatePath in $candidatePaths) {
+        if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+            return $candidatePath
+        }
+    }
+
+    return $null
+}
+
 $buildFullPath = Get-FullPath $BuildPath
 $manifestFullPath = Get-FullPath $ManifestPath
 Assert-File -Path $manifestFullPath -Description "Arduino/CSDK export manifest"
@@ -298,8 +323,16 @@ if ($sketchObjects.Count -eq 0) {
     throw "No Arduino CLI sketch objects found in: $sketchObjectDir"
 }
 
-$coreArchive = Join-Path $buildFullPath "core\core.a"
-Assert-File -Path $coreArchive -Description "Arduino CLI core archive"
+$coreArchive = Find-ArduinoCoreArchive -BuildPath $buildFullPath -PreferredPath $CoreArchive
+if ($null -eq $coreArchive) {
+    $expectedCoreArchive = if ([string]::IsNullOrWhiteSpace($CoreArchive)) {
+        "$buildFullPath\core.a or $buildFullPath\core\core.a"
+    }
+    else {
+        $CoreArchive
+    }
+    throw "Arduino CLI core archive was not found: $expectedCoreArchive"
+}
 
 $libraryDir = Join-Path $buildFullPath "libraries"
 $libraryObjects = @(Get-ChildItem -LiteralPath $libraryDir -Recurse -Filter "*.o" -File -ErrorAction SilentlyContinue)

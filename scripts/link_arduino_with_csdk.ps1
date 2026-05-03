@@ -3,6 +3,7 @@ param(
     [string]$BuildPath,
     [string]$ProjectName = "air780epm_runner",
     [string]$SketchPath,
+    [string]$CoreArchive,
     [string]$ManifestPath,
     [string]$ToolchainRoot,
     [switch]$RefreshPrebuild,
@@ -156,6 +157,31 @@ function Find-LinkLibrary {
     return $null
 }
 
+function Find-ArduinoCoreArchive {
+    param(
+        [Parameter(Mandatory = $true)][string]$BuildPath,
+        [string]$PreferredPath
+    )
+
+    $candidatePaths = @()
+    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
+        $candidatePaths += (Get-FullPath $PreferredPath)
+    }
+
+    $candidatePaths += @(
+        (Join-Path $BuildPath "core.a"),
+        (Join-Path $BuildPath "core\core.a")
+    )
+
+    foreach ($candidatePath in $candidatePaths) {
+        if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+            return $candidatePath
+        }
+    }
+
+    return $null
+}
+
 function Test-PrebuildArtifacts {
     param([Parameter(Mandatory = $true)]$Manifest)
 
@@ -211,8 +237,16 @@ if ($sketchObjects.Count -eq 0) {
     throw "No Arduino CLI sketch objects found in: $sketchObjectDir"
 }
 
-$coreArchive = Join-Path $buildFullPath "core\core.a"
-Assert-File -Path $coreArchive -Description "Arduino CLI core archive"
+$coreArchive = Find-ArduinoCoreArchive -BuildPath $buildFullPath -PreferredPath $CoreArchive
+if ($null -eq $coreArchive) {
+    $expectedCoreArchive = if ([string]::IsNullOrWhiteSpace($CoreArchive)) {
+        "$buildFullPath\core.a or $buildFullPath\core\core.a"
+    }
+    else {
+        $CoreArchive
+    }
+    throw "Arduino CLI core archive was not found: $expectedCoreArchive"
+}
 
 $libraryDir = Join-Path $buildFullPath "libraries"
 $libraryObjects = @(Get-ChildItem -LiteralPath $libraryDir -Recurse -Filter "*.o" -File -ErrorAction SilentlyContinue)
@@ -306,6 +340,7 @@ $directLinkDir = Join-Path $buildFullPath "direct-link"
     -ManifestPath $manifestFullPath `
     -ProjectName $project `
     -OutputDirectory $directLinkDir `
+    -CoreArchive $coreArchive `
     -ToolchainRoot $ToolchainRoot `
     -Package
 if ($LASTEXITCODE -ne 0) {

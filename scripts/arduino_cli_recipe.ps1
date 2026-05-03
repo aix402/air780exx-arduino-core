@@ -6,6 +6,7 @@ param(
     [string]$BuildPath,
     [string]$ProjectName,
     [string]$SketchPath,
+    [string]$CoreArchive,
     [string]$CsdkToolRoot,
     [string]$ToolchainRoot,
     [string]$ExtraFlags,
@@ -63,6 +64,11 @@ function Import-ArduinoCliRecipeRemainingArgs {
                     $script:ExtraFlags = $value
                 }
             }
+            "corearchive" {
+                if ([string]::IsNullOrWhiteSpace($script:CoreArchive)) {
+                    $script:CoreArchive = $value
+                }
+            }
         }
     }
 }
@@ -71,6 +77,7 @@ Import-ArduinoCliRecipeRemainingArgs
 $CsdkToolRoot = Normalize-ArduinoCliRecipeArgument $CsdkToolRoot
 $ToolchainRoot = Normalize-ArduinoCliRecipeArgument $ToolchainRoot
 $ExtraFlags = Normalize-ArduinoCliRecipeArgument $ExtraFlags
+$CoreArchive = Normalize-ArduinoCliRecipeArgument $CoreArchive
 
 function Test-UsableToolRoot {
     param([AllowNull()][string]$Path)
@@ -508,6 +515,9 @@ function Invoke-ArduinoCsdkPrebuiltCombine {
         ProjectName = $ProjectName
         SketchPath = $SketchPath
         ManifestPath = $defaultManifestPath
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CoreArchive)) {
+        $combineArgs["CoreArchive"] = $CoreArchive
     }
     $requestedToolchainRoot = Get-RequestedToolchainRoot
     if (-not [string]::IsNullOrWhiteSpace($requestedToolchainRoot)) {

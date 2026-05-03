@@ -85,7 +85,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_ins
 
 The gate regenerates the platform and `luatos-cli` archives, generates the
 draft package index, installs the package into an isolated Arduino15-like data
-directory, and compiles both `Blink` and `ComplexLibraryProbe`.
+directory, verifies the installed platform shape, compiles installed-package
+`Blink` with Arduino CLI's default build path, then compiles
+`ComplexLibraryProbe` with a temporary sketchbook library to keep third-party
+library coverage out of the published example menu.
 
 Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in

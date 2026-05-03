@@ -41,21 +41,71 @@ function Invoke-ArduinoCli {
 function Invoke-SmokeCompile {
     param(
         [Parameter(Mandatory = $true)][string]$SketchPath,
-        [Parameter(Mandatory = $true)][string]$BuildName
+        [Parameter(Mandatory = $true)][string]$BuildName,
+        [switch]$UseDefaultBuildPath
     )
 
     $buildPath = Join-Path $smokeFullRoot "build\$BuildName"
-    if (Test-Path -LiteralPath $buildPath) {
+    if (-not $UseDefaultBuildPath -and (Test-Path -LiteralPath $buildPath)) {
         Remove-Item -LiteralPath $buildPath -Recurse -Force
     }
 
-    Invoke-ArduinoCli -Arguments @(
+    $compileArgs = @(
         "--config-file", $configPath,
         "compile",
         "-b", "air780:air780:air780epm_dev",
-        "--build-path", $buildPath,
         $SketchPath
     )
+    if (-not $UseDefaultBuildPath) {
+        $compileArgs = @(
+            "--config-file", $configPath,
+            "compile",
+            "-b", "air780:air780:air780epm_dev",
+            "--build-path", $buildPath,
+            $SketchPath
+        )
+    }
+    else {
+        $compileArgs += "--clean"
+    }
+
+    Invoke-ArduinoCli -Arguments $compileArgs
+}
+
+function Copy-SmokeLibrary {
+    param([Parameter(Mandatory = $true)][string]$LibraryName)
+
+    $sourceRoot = Resolve-RepoPath ".\libraries\$LibraryName"
+    if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
+        throw "Smoke library was not found: $sourceRoot"
+    }
+
+    $destinationRoot = Join-Path $userDir "libraries\$LibraryName"
+    if (Test-Path -LiteralPath $destinationRoot) {
+        Remove-Item -LiteralPath $destinationRoot -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destinationRoot) | Out-Null
+    Copy-Item -LiteralPath $sourceRoot -Destination $destinationRoot -Recurse -Force
+}
+
+function Assert-InstalledPlatformShape {
+    param([Parameter(Mandatory = $true)][string]$PlatformRoot)
+
+    $requiredExample = Join-Path $PlatformRoot "examples\01.Basics\Blink\Blink.ino"
+    Assert-File -Path $requiredExample -Description "installed Blink example"
+
+    $unexpectedPaths = @(
+        (Join-Path $PlatformRoot "examples\00.Core"),
+        (Join-Path $PlatformRoot "examples\99.Experimental"),
+        (Join-Path $PlatformRoot "libraries\ArduinoJson"),
+        (Join-Path $PlatformRoot "libraries\Air780EpmComplexLibProbe"),
+        (Join-Path $PlatformRoot "libraries\Air780EpmLinkProbe")
+    )
+    foreach ($path in $unexpectedPaths) {
+        if (Test-Path -LiteralPath $path) {
+            throw "Unexpected release package content was installed: $path"
+        }
+    }
 }
 
 $arduinoCliFullPath = Resolve-RepoPath $ArduinoCliPath
@@ -128,11 +178,20 @@ directories:
     Assert-File -Path $installedLuatOSCli -Description "package-index installed luatos-cli"
     & $installedLuatOSCli --version | Write-Output
 
-    Write-Host "==> Compile Blink from installed package"
-    Invoke-SmokeCompile `
-        -SketchPath (Resolve-RepoPath ".\examples\01.Basics\Blink") `
-        -BuildName "Blink"
+    $installedPlatformRoot = Join-Path $dataDir "packages\air780\hardware\air780\0.1.0"
+    Assert-InstalledPlatformShape -PlatformRoot $installedPlatformRoot
+    $installedBlink = Join-Path $installedPlatformRoot "examples\01.Basics\Blink"
+    if (-not (Test-Path -LiteralPath $installedBlink -PathType Container)) {
+        throw "Installed Blink example was not found: $installedBlink"
+    }
 
+    Write-Host "==> Compile Blink from installed package with default Arduino build path"
+    Invoke-SmokeCompile `
+        -SketchPath $installedBlink `
+        -BuildName "Blink" `
+        -UseDefaultBuildPath
+
+    Copy-SmokeLibrary -LibraryName "Air780EpmComplexLibProbe"
     Write-Host "==> Compile ComplexLibraryProbe from installed package"
     Invoke-SmokeCompile `
         -SketchPath (Resolve-RepoPath ".\examples\99.Experimental\ComplexLibraryProbe") `

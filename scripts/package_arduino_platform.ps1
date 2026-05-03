@@ -1,7 +1,22 @@
 param(
     [string]$PlatformDirectory = ".\core\air780epm",
     [string]$ExamplesDirectory = ".\examples",
+    [string[]]$PackageExampleDirectories = @(
+        "01.Basics",
+        "02.Serial",
+        "03.Bus",
+        "04.PWM",
+        "05.Display",
+        "06.Analog",
+        "07.Servo",
+        "08.Network",
+        "09.NVM",
+        "10.FileSystem",
+        "11.OTA",
+        "12.Sleep"
+    ),
     [string]$LibrariesDirectory = ".\libraries",
+    [string[]]$PackageLibraries = @(),
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version = "0.1.0",
     [string]$PlatformArchiveRoot = "air780",
@@ -105,10 +120,30 @@ try {
         Copy-Item -LiteralPath $_.FullName -Destination $stagingPlatformRoot -Recurse -Force
     }
     if (Test-Path -LiteralPath $examplesRoot -PathType Container) {
-        Copy-Item -LiteralPath $examplesRoot -Destination (Join-Path $stagingPlatformRoot "examples") -Recurse -Force
+        $stagingExamplesRoot = Join-Path $stagingPlatformRoot "examples"
+        New-Item -ItemType Directory -Force -Path $stagingExamplesRoot | Out-Null
+        foreach ($exampleDirectory in @($PackageExampleDirectories)) {
+            if ([string]::IsNullOrWhiteSpace($exampleDirectory)) {
+                continue
+            }
+            $exampleRoot = Join-Path $examplesRoot $exampleDirectory
+            if (Test-Path -LiteralPath $exampleRoot -PathType Container) {
+                Copy-Item -LiteralPath $exampleRoot -Destination (Join-Path $stagingExamplesRoot $exampleDirectory) -Recurse -Force
+            }
+        }
     }
     if (Test-Path -LiteralPath $librariesRoot -PathType Container) {
-        Copy-Item -LiteralPath $librariesRoot -Destination (Join-Path $stagingPlatformRoot "libraries") -Recurse -Force
+        $stagingLibrariesRoot = Join-Path $stagingPlatformRoot "libraries"
+        New-Item -ItemType Directory -Force -Path $stagingLibrariesRoot | Out-Null
+        foreach ($libraryName in @($PackageLibraries)) {
+            if ([string]::IsNullOrWhiteSpace($libraryName)) {
+                continue
+            }
+            $libraryRoot = Join-Path $librariesRoot $libraryName
+            if (Test-Path -LiteralPath $libraryRoot -PathType Container) {
+                Copy-Item -LiteralPath $libraryRoot -Destination (Join-Path $stagingLibrariesRoot $libraryName) -Recurse -Force
+            }
+        }
     }
     foreach ($scriptName in $platformToolScripts) {
         Copy-Item -LiteralPath (Join-Path $repoRoot "scripts\$scriptName") -Destination (Join-Path $stagingPlatformRoot "tools\$scriptName") -Force
@@ -134,7 +169,9 @@ $releaseManifest = [ordered]@{
     git_commit = Get-GitValue -Arguments @("rev-parse", "HEAD")
     platform_directory = Get-RepoRelativePath $platformRoot
     examples_directory = if (Test-Path -LiteralPath $examplesRoot -PathType Container) { Get-RepoRelativePath $examplesRoot } else { $null }
+    packaged_example_directories = @($PackageExampleDirectories)
     libraries_directory = if (Test-Path -LiteralPath $librariesRoot -PathType Container) { Get-RepoRelativePath $librariesRoot } else { $null }
+    packaged_libraries = @($PackageLibraries)
     platform_archive_root = $PlatformArchiveRoot
     archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length

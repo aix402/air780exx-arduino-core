@@ -24,7 +24,7 @@ recipe.S.o.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPol
 archive_file_path={build.path}/{archive_file}
 recipe.ar.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" archive-object -SourceFile "{object_file}" -OutputFile "{archive_file_path}" -CsdkToolRoot:"{tools.air780epm_csdk.path}" -ToolchainRoot:"{tools.air780epm_gnu_rm.path}"
 
-recipe.c.combine.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" combine-csdk-prebuilt -BuildPath "{build.path}" -ProjectName "{build.project_name}" -SketchPath "{build.source.path}" -CsdkToolRoot:"{tools.air780epm_csdk.path}" -ToolchainRoot:"{tools.air780epm_gnu_rm.path}"
+recipe.c.combine.pattern.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" combine-csdk-prebuilt -BuildPath "{build.path}" -ProjectName "{build.project_name}" -SketchPath "{build.source.path}" -CoreArchive "{archive_file_path}" -CsdkToolRoot:"{tools.air780epm_csdk.path}" -ToolchainRoot:"{tools.air780epm_gnu_rm.path}"
 
 recipe.output.tmp_file={build.project_name}.binpkg
 recipe.output.save_file={build.project_name}.{build.variant}.binpkg
