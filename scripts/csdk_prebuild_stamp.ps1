@@ -24,7 +24,21 @@ function Get-RelativePathForStamp {
 
 function Get-StampFileHash {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $stream = [System.IO.File]::OpenRead($Path)
+        try {
+            $hash = $sha.ComputeHash($stream)
+        }
+        finally {
+            $stream.Dispose()
+        }
+    }
+    finally {
+        $sha.Dispose()
+    }
+    return [System.BitConverter]::ToString($hash).Replace("-", "").ToLowerInvariant()
 }
 
 function Get-CsdkPrebuildInputFiles {

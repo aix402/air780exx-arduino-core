@@ -29,6 +29,18 @@ function Assert-File {
     }
 }
 
+function Get-RepoRelativePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $base = [System.IO.Path]::GetFullPath([string]$repoRoot)
+    $target = [System.IO.Path]::GetFullPath($Path)
+    if (-not $base.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $base += [System.IO.Path]::DirectorySeparatorChar
+    }
+    $relative = ([Uri]$base).MakeRelativeUri([Uri]$target).ToString()
+    return [Uri]::UnescapeDataString($relative).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+}
+
 $sourceFullPath = Resolve-RepoPath $SourcePath
 $outputRoot = Resolve-RepoPath $OutputDirectory
 Assert-File -Path $sourceFullPath -Description "luatos-cli executable"
@@ -96,8 +108,8 @@ $releaseManifest = [ordered]@{
     tool_name = "luatos-cli"
     archive_layout = "ArduinoTool"
     tool_archive_root = $ToolArchiveRoot
-    source = [System.IO.Path]::GetRelativePath($repoRoot, $sourceFullPath)
-    archive = [System.IO.Path]::GetRelativePath($repoRoot, $zipPath)
+    source = Get-RepoRelativePath $sourceFullPath
+    archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length
     sha256 = $hash
 }

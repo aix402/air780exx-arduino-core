@@ -29,6 +29,18 @@ function Assert-File {
     }
 }
 
+function Get-RepoRelativePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $base = [System.IO.Path]::GetFullPath([string]$repoRoot)
+    $target = [System.IO.Path]::GetFullPath($Path)
+    if (-not $base.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $base += [System.IO.Path]::DirectorySeparatorChar
+    }
+    $relative = ([Uri]$base).MakeRelativeUri([Uri]$target).ToString()
+    return [Uri]::UnescapeDataString($relative).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+}
+
 if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
     $ManifestPath = Join-Path $repoRoot "runner\air780epm_runner\build\arduino_export_manifest.json"
 }
@@ -115,7 +127,7 @@ $releaseManifest = [ordered]@{
     tool_name = "gnu-rm"
     archive_layout = "ArduinoTool"
     tool_archive_root = $ToolArchiveRoot
-    archive = [System.IO.Path]::GetRelativePath($repoRoot, $zipPath)
+    archive = Get-RepoRelativePath $zipPath
     archive_size_bytes = [Int64]$zipInfo.Length
     sha256 = $hash
     toolchain_size_bytes = [Int64]$toolchainSizeBytes

@@ -65,7 +65,13 @@ function Get-GitValue {
 function Get-RepoRelativePath {
     param([Parameter(Mandatory = $true)][string]$Path)
 
-    return [System.IO.Path]::GetRelativePath($repoRoot, ([System.IO.Path]::GetFullPath($Path)))
+    $base = [System.IO.Path]::GetFullPath([string]$repoRoot)
+    $target = [System.IO.Path]::GetFullPath($Path)
+    if (-not $base.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $base += [System.IO.Path]::DirectorySeparatorChar
+    }
+    $relative = ([Uri]$base).MakeRelativeUri([Uri]$target).ToString()
+    return [Uri]::UnescapeDataString($relative).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
 }
 
 function Copy-PackagedExamples {
@@ -102,7 +108,7 @@ maintainer=AIR780 Arduino Core Contributors
 sentence=Examples for AIR780 Arduino boards.
 paragraph=Board examples for the AIR780 Arduino Core package.
 category=Other
-url=https://github.com/aix402/air780exx-arduino-core
+url=https://github.com/aix402/air780-arduino-package
 architectures=air780
 "@
     [System.IO.File]::WriteAllText(

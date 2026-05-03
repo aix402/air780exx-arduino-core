@@ -232,6 +232,10 @@ function Add-OutputDirectory {
 
 function Convert-DefineToArgument {
     param([Parameter(Mandatory = $true)][string]$Define)
+
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        $Define = $Define.Replace('"', '\"')
+    }
     return ("-D" + $Define)
 }
 

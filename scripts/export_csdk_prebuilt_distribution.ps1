@@ -21,6 +21,21 @@ function Get-FullPath {
     return [System.IO.Path]::GetFullPath((Join-Path $repoRoot $Path))
 }
 
+function Get-RelativePath {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseRoot,
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+
+    $base = [System.IO.Path]::GetFullPath($BaseRoot)
+    $target = [System.IO.Path]::GetFullPath($Path)
+    if (-not $base.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $base += [System.IO.Path]::DirectorySeparatorChar
+    }
+    $relative = ([Uri]$base).MakeRelativeUri([Uri]$target).ToString()
+    return [Uri]::UnescapeDataString($relative).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+}
+
 function Assert-File {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -89,6 +104,15 @@ function Write-ArduinoStaticConstructorLinkerTemplate {
     [System.IO.File]::WriteAllText($outputFullPath, $content, [System.Text.UTF8Encoding]::new($false))
 }
 
+function Convert-DefineToNativeArgument {
+    param([Parameter(Mandatory = $true)][string]$Define)
+
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        $Define = $Define.Replace('"', '\"')
+    }
+    return "-D$Define"
+}
+
 function Invoke-PreprocessFile {
     param(
         [Parameter(Mandatory = $true)][string]$Compiler,
@@ -114,7 +138,7 @@ function Invoke-PreprocessFile {
         $preprocessArgs.Add("-dD") | Out-Null
     }
     foreach ($define in $Defines) {
-        $preprocessArgs.Add("-D$define") | Out-Null
+        $preprocessArgs.Add((Convert-DefineToNativeArgument -Define $define)) | Out-Null
     }
     foreach ($includeDir in $IncludeDirs) {
         if (Test-Path -LiteralPath $includeDir -PathType Container) {
@@ -141,7 +165,7 @@ function Copy-FilePreservingRepoPath {
 
     $sourceFull = Get-FullPath $Source
     Assert-File -Path $sourceFull -Description "distribution source file"
-    $relative = [System.IO.Path]::GetRelativePath($SourceRepoRoot, $sourceFull)
+    $relative = Get-RelativePath -BaseRoot $SourceRepoRoot -Path $sourceFull
     if ($relative.StartsWith("..")) {
         throw "Refusing to copy file outside source repo root: $sourceFull"
     }
@@ -164,7 +188,7 @@ function Copy-DirectoryPreservingRepoPath {
     if (-not (Test-Path -LiteralPath $sourceFull -PathType Container)) {
         return
     }
-    $relative = [System.IO.Path]::GetRelativePath($SourceRepoRoot, $sourceFull)
+    $relative = Get-RelativePath -BaseRoot $SourceRepoRoot -Path $sourceFull
     if ($relative.StartsWith("..")) {
         throw "Refusing to copy directory outside source repo root: $sourceFull"
     }
@@ -297,7 +321,7 @@ function ConvertTo-ManifestRelativePath {
         return $Value
     }
     if ([System.IO.Path]::IsPathRooted($Value) -and $Value.StartsWith($BaseRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-        return [System.IO.Path]::GetRelativePath($BaseRoot, $Value)
+        return Get-RelativePath -BaseRoot $BaseRoot -Path $Value
     }
     return $Value
 }
@@ -514,7 +538,7 @@ else {
     }
 }
 $distributionManifest["distribution_package"] = $true
-$distributionManifest["distribution_source_manifest"] = [System.IO.Path]::GetRelativePath($repoRoot, $manifestFullPath)
+$distributionManifest["distribution_source_manifest"] = Get-RelativePath -BaseRoot $repoRoot -Path $manifestFullPath
 $distributionManifest["distribution_copy_policy"] = if ($NoToolchain) {
     "generated-linker-mem-map-reduced-headers-required-link-libraries-external-toolchain"
 }

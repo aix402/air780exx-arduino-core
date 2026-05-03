@@ -96,7 +96,7 @@ $platform = [ordered]@{
     version = $PlatformVersion
     category = "Contributed"
     help = [ordered]@{
-        online = "https://gitee.com/openLuat"
+        online = "https://github.com/aix402/air780-arduino-package"
     }
     boards = @(
         [ordered]@{ name = "AIR780EPM Dev Board" }
@@ -130,7 +130,7 @@ $index = [ordered]@{
         [ordered]@{
             name = "air780"
             maintainer = "AIR780 Arduino Core Contributors"
-            websiteURL = "https://github.com/aix402/air780exx-arduino-core"
+            websiteURL = "https://github.com/aix402/air780-arduino-package"
             email = ""
             platforms = @($platform)
             tools = @(

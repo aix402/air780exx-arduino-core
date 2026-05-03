@@ -11,8 +11,8 @@ tools.air780epm_usb.path={runtime.platform.path}/tools
 tools.air780epm_csdk.path={runtime.tools.air780epm-csdk.path}
 tools.air780epm_gnu_rm.path={runtime.tools.gnu-rm.path}
 tools.air780epm_luatos_cli.path={runtime.tools.luatos-cli.path}
-tools.air780epm_pwsh.cmd=pwsh
-tools.air780epm_usb.cmd=pwsh
+tools.air780epm_pwsh.cmd=powershell.exe
+tools.air780epm_usb.cmd=powershell.exe
 
 recipe.preproc.includes.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-stdout -SourceFile "{source_file}" -CsdkToolRoot:"{tools.air780epm_csdk.path}" -ToolchainRoot:"{tools.air780epm_gnu_rm.path}" -ExtraFlags:"{includes}"
 recipe.preproc.macros.windows="{tools.air780epm_pwsh.cmd}" -NoProfile -ExecutionPolicy Bypass -File "{tools.air780epm_cli.path}/arduino_cli_recipe.ps1" preprocess-copy -SourceFile "{source_file}" -OutputFile "{preprocessed_file_path}" -CsdkToolRoot:"{tools.air780epm_csdk.path}" -ToolchainRoot:"{tools.air780epm_gnu_rm.path}" -ExtraFlags:"{includes}"

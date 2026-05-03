@@ -198,6 +198,15 @@ function Write-ArduinoStaticConstructorLinkerTemplate {
     [System.IO.File]::WriteAllText((Get-FullPath $OutputPath), $content, [System.Text.UTF8Encoding]::new($false))
 }
 
+function Convert-DefineToNativeArgument {
+    param([Parameter(Mandatory = $true)][string]$Define)
+
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        $Define = $Define.Replace('"', '\"')
+    }
+    return "-D$Define"
+}
+
 function Invoke-PreprocessFile {
     param(
         [Parameter(Mandatory = $true)][string]$Compiler,
@@ -217,7 +226,7 @@ function Invoke-PreprocessFile {
         $preprocessArgs.Add("-dD") | Out-Null
     }
     foreach ($define in $Defines) {
-        $preprocessArgs.Add("-D$define") | Out-Null
+        $preprocessArgs.Add((Convert-DefineToNativeArgument -Define $define)) | Out-Null
     }
     foreach ($includeDir in $IncludeDirs) {
         if (Test-Path -LiteralPath $includeDir -PathType Container) {
