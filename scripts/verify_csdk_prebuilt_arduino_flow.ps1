@@ -117,6 +117,49 @@ function Assert-IsolatedArduinoCli {
     Assert-Directory -Path $ctagsDir -Description "Project-local builtin ctags package"
 }
 
+function Get-LocalArduinoCliPath {
+    $cliPath = Resolve-RepoPath "tools\arduino-cli-release\arduino-cli.exe"
+    Assert-File -Path $cliPath -Description "Project-local arduino-cli"
+    return $cliPath
+}
+
+function Ensure-ArduinoLibrary {
+    param(
+        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][string]$Version
+    )
+
+    $libraryRoot = Resolve-RepoPath "libraries\$Name"
+    $propertiesPath = Join-Path $libraryRoot "library.properties"
+    $installedVersion = ""
+    if (Test-Path -LiteralPath $propertiesPath -PathType Leaf) {
+        foreach ($line in Get-Content -LiteralPath $propertiesPath) {
+            if ($line -match "^\s*version\s*=\s*(.+?)\s*$") {
+                $installedVersion = $Matches[1]
+                break
+            }
+        }
+    }
+
+    if ($installedVersion -eq $Version) {
+        Write-Host "Dependency present: $Name@$Version"
+        return
+    }
+
+    & (Join-Path $PSScriptRoot "arduino_cli_setup.ps1") | Write-Output
+
+    $cliPath = Get-LocalArduinoCliPath
+    $configPath = Resolve-RepoPath ".arduino-cli-config\arduino-cli.yaml"
+    Write-Host "Installing dependency: $Name@$Version"
+    & $cliPath "--config-file" $configPath "lib" "install" "$Name@$Version"
+    if ($LASTEXITCODE -ne 0) {
+        throw "arduino-cli lib install failed for $Name@$Version with exit code $LASTEXITCODE"
+    }
+
+    Assert-TextContains -Path $propertiesPath -Pattern "name=$Name" -Description "$Name library metadata"
+    Assert-TextContains -Path $propertiesPath -Pattern "version=$Version" -Description "$Name library metadata"
+}
+
 function Assert-FirmwareOutputs {
     param(
         [Parameter(Mandatory = $true)][string]$SketchName,
@@ -289,6 +332,10 @@ $results.Add((Invoke-VerifyStep -Name "Platform recipes use CSDK prebuilt combin
     $platformPath = Resolve-RepoPath "core\air780epm\platform.txt"
     Assert-TextContains -Path $platformPath -Pattern "combine-csdk-prebuilt" -Description "AIR780EPM platform recipes"
     Assert-TextContains -Path $platformPath -Pattern "report-size" -Description "AIR780EPM platform recipes"
+})) | Out-Null
+
+$results.Add((Invoke-VerifyStep -Name "Ensure ArduinoJson dependency" -Script {
+    Ensure-ArduinoLibrary -Name "ArduinoJson" -Version "7.4.3"
 })) | Out-Null
 
 $cases = @(

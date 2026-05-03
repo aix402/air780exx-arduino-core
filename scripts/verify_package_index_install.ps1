@@ -29,12 +29,68 @@ function Assert-File {
     }
 }
 
+function Invoke-CheckedPwshScript {
+    param(
+        [Parameter(Mandatory = $true)][string]$Description,
+        [Parameter(Mandatory = $true)][string]$ScriptPath,
+        [string[]]$Arguments = @()
+    )
+
+    Write-Host "==> $Description"
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Description failed with exit code $LASTEXITCODE"
+    }
+}
+
 function Invoke-ArduinoCli {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
 
     & $arduinoCliFullPath @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "arduino-cli failed with exit code $LASTEXITCODE`: $($Arguments -join ' ')"
+    }
+}
+
+function Ensure-CsdkPrebuiltReleaseInputs {
+    $releaseDir = Resolve-RepoPath ".\dist\releases"
+    $distributionManifest = Resolve-RepoPath ".\dist\csdk-prebuilt-air780epm\arduino_export_manifest.json"
+    $csdkArchive = Get-ChildItem -LiteralPath $releaseDir -Filter "csdk-prebuilt-air780epm-*-notoolchain-toolroot.zip" -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    $gnuRmArchive = Join-Path $releaseDir "gnu-rm-10.2.1-ec718.zip"
+
+    if (($null -ne $csdkArchive) -and (Test-Path -LiteralPath $gnuRmArchive -PathType Leaf)) {
+        return
+    }
+
+    if (-not (Test-Path -LiteralPath $distributionManifest -PathType Leaf)) {
+        Invoke-CheckedPwshScript `
+            -Description "Export CSDK prebuilt distribution" `
+            -ScriptPath (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1")
+    }
+
+    Assert-File -Path $distributionManifest -Description "CSDK prebuilt distribution manifest"
+
+    if ($null -eq $csdkArchive) {
+        Invoke-CheckedPwshScript `
+            -Description "Package CSDK prebuilt tool archive" `
+            -ScriptPath (Join-Path $PSScriptRoot "package_csdk_prebuilt_distribution.ps1") `
+            -Arguments @(
+                "-Version", "0.1.0-notoolchain-toolroot",
+                "-ArchiveLayout", "ToolRoot",
+                "-ToolArchiveRoot", "air780epm-csdk",
+                "-Clean"
+            )
+    }
+
+    if (-not (Test-Path -LiteralPath $gnuRmArchive -PathType Leaf)) {
+        Invoke-CheckedPwshScript `
+            -Description "Package GNU Arm toolchain archive" `
+            -ScriptPath (Join-Path $PSScriptRoot "package_gnu_rm_toolchain.ps1") `
+            -Arguments @(
+                "-Version", "10.2.1-ec718",
+                "-Clean"
+            )
     }
 }
 
@@ -124,6 +180,7 @@ function Assert-Air780LibraryExamples {
 
 $arduinoCliFullPath = Resolve-RepoPath $ArduinoCliPath
 Assert-File -Path $arduinoCliFullPath -Description "arduino-cli executable"
+New-Item -ItemType Directory -Force -Path (Resolve-RepoPath ".\dist\releases") | Out-Null
 
 $smokeFullRoot = if ([System.IO.Path]::IsPathRooted($SmokeRoot)) {
     [System.IO.Path]::GetFullPath($SmokeRoot)
@@ -132,24 +189,23 @@ else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $SmokeRoot))
 }
 
-Write-Host "==> Package Arduino platform archive"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_arduino_platform.ps1") -Version "0.1.0" -Clean
-if ($LASTEXITCODE -ne 0) {
-    throw "Arduino platform packaging failed with exit code $LASTEXITCODE"
-}
+Ensure-CsdkPrebuiltReleaseInputs
 
-Write-Host "==> Package luatos-cli tool archive"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") -Clean
-if ($LASTEXITCODE -ne 0) {
-    throw "luatos-cli tool packaging failed with exit code $LASTEXITCODE"
-}
+Invoke-CheckedPwshScript `
+    -Description "Package Arduino platform archive" `
+    -ScriptPath (Join-Path $PSScriptRoot "package_arduino_platform.ps1") `
+    -Arguments @("-Version", "0.1.0", "-Clean")
 
-Write-Host "==> Generate package index draft"
+Invoke-CheckedPwshScript `
+    -Description "Package luatos-cli tool archive" `
+    -ScriptPath (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") `
+    -Arguments @("-Clean")
+
 $baseUrl = "http://127.0.0.1:$Port"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") -BaseUrl $baseUrl
-if ($LASTEXITCODE -ne 0) {
-    throw "Package index generation failed with exit code $LASTEXITCODE"
-}
+Invoke-CheckedPwshScript `
+    -Description "Generate package index draft" `
+    -ScriptPath (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") `
+    -Arguments @("-BaseUrl", $baseUrl)
 
 $releaseDir = Join-Path $repoRoot "dist\releases"
 $server = Start-Process `
