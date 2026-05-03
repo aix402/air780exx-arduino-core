@@ -99,8 +99,8 @@ The platform archive contains:
 - `cores\air780epm`.
 - `variants\air780epm_dev`.
 - platform-local recipe/upload/helper scripts under `tools`.
-- bundled platform examples under `examples`.
-- bundled AIR780EPM helper libraries under `libraries`.
+- bundled AIR780 example library under `libraries\AIR780`.
+- AIR780 examples under `libraries\AIR780\examples`.
 
 The tool archives must use a single short top-level directory in the zip. Arduino CLI strips that directory while installing the tool. The CSDK tool archive currently uses `air780epm-csdk`; the GNU Arm tool archive uses `gnu-rm`; the flash tool archive uses `luatos-cli`.
 
@@ -401,7 +401,7 @@ Package-index install acceptance:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean
 ```
 
-This starts a local HTTP server for `dist\releases`, generates a package-index draft, installs `air780:air780` into an isolated Arduino15-like data directory under `%LOCALAPPDATA%\Arduino15-air780-smoke`, and compiles both `Blink` and `ComplexLibraryProbe`.
+This starts a local HTTP server for `dist\releases`, generates a package-index draft, installs `air780:air780` into an isolated Arduino15-like data directory under `%LOCALAPPDATA%\Arduino15-air780-smoke`, verifies the installed `AIR780` example library is visible to Arduino CLI, and compiles both `Blink` and `ComplexLibraryProbe`. `Blink` is compiled from the installed package example with Arduino CLI's default build path, which exercises the same `core.a` archive location used by Arduino IDE.
 
 The verification intentionally uses a path shaped like a normal Windows Arduino15 install. A much deeper worktree-local data path can make GNU Arm Embedded 10.2.1 fail to find its C++ multilib header `bits\c++config.h`; the Arduino15-like smoke path has been verified to avoid that failure.
 
@@ -427,6 +427,8 @@ Verified in this experiment:
 - Distribution-built `ComplexLibraryProbe` hardware flash and runtime log.
 - Boards Manager-style package-index install into an isolated Arduino15-like directory.
 - Package-index-installed `Blink` and `ComplexLibraryProbe` compile/package outputs.
+- GitHub release-candidate install in Arduino IDE with `File > Examples > AIR780EPM Dev Board Examples > AIR780 > 01.Basics > Blink`.
+- Arduino IDE package-installed `Blink` compile and upload.
 
 ## Key Constraints
 
