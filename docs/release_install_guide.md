@@ -98,3 +98,7 @@ library coverage out of the published example menu.
 Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in
 `dist\releases`.
+
+The `v0.1.0-rc4` public GitHub release candidate has passed this release gate,
+then passed Arduino IDE install, `AIR780 > 01.Basics > Blink` compile, and
+upload on AIR780EPM hardware.

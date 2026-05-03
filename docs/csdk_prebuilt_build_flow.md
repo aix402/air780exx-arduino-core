@@ -427,8 +427,8 @@ Verified in this experiment:
 - Distribution-built `ComplexLibraryProbe` hardware flash and runtime log.
 - Boards Manager-style package-index install into an isolated Arduino15-like directory.
 - Package-index-installed `Blink` and `ComplexLibraryProbe` compile/package outputs.
-- GitHub release-candidate install in Arduino IDE with `File > Examples > AIR780EPM Dev Board Examples > AIR780 > 01.Basics > Blink`.
-- Arduino IDE package-installed `Blink` compile and upload.
+- GitHub `v0.1.0-rc4` release-candidate install in Arduino IDE with `File > Examples > AIR780EPM Dev Board Examples > AIR780 > 01.Basics > Blink`.
+- Arduino IDE package-installed `Blink` compile and upload from `v0.1.0-rc4`.
 
 ## Key Constraints
 
