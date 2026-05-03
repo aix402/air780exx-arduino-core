@@ -30,6 +30,26 @@ The package index URL must point to the published
 `package_air780_index.draft.json` generated during release testing
 uses a temporary `127.0.0.1` URL and is not a publishable URL.
 
+Current public release-candidate index:
+
+```text
+https://github.com/aix402/air780-arduino-package/releases/download/v0.1.0-rc5/package_air780_index.json
+```
+
+## Proxy Notes
+
+If Arduino CLI/IDE can open Arduino's built-in indexes but fails to fetch the
+AIR780 package index or GitHub release assets with `wsarecv` / connection-reset
+errors, route Arduino CLI through the local proxy in the CLI config:
+
+```yaml
+network:
+  proxy: http://127.0.0.1:7897
+```
+
+This avoids changing the system WinHTTP proxy and does not require administrator
+permissions. Adjust the port to match the local proxy service.
+
 ## Compile
 
 Open `File > Examples > AIR780EPM Dev Board Examples > AIR780 >
@@ -99,6 +119,12 @@ Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in
 `dist\releases`.
 
-The `v0.1.0-rc4` public GitHub release candidate has passed this release gate,
-then passed Arduino IDE install, `AIR780 > 01.Basics > Blink` compile, and
-upload on AIR780EPM hardware.
+The `v0.1.0-rc5` public GitHub release candidate has passed:
+
+- local package-index install smoke from a generated `127.0.0.1` index;
+- online package-index install from the GitHub Release URL using
+  `network.proxy`;
+- installed-package `AIR780 > 01.Basics > Blink` compile.
+
+The earlier `v0.1.0-rc4` candidate also passed Arduino IDE install,
+`AIR780 > 01.Basics > Blink` compile, and upload on AIR780EPM hardware.
