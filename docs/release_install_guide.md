@@ -32,8 +32,13 @@ uses a temporary `127.0.0.1` URL and is not a publishable URL.
 
 ## Compile
 
-Open `File > Examples > AIR780 Arduino Core > 01.Basics > Blink`, then click
-Verify.
+Open `File > Examples > AIR780EPM Dev Board Examples > AIR780 >
+01.Basics > Blink`, then click Verify.
+
+Arduino IDE may also list IDE-bundled or user-installed libraries, such as
+Ethernet or ArduinoJson, under the current board's examples section when those
+libraries declare broad architecture compatibility. Those entries are not
+bundled by the AIR780 package.
 
 The package manager installation should provide the CSDK ABI package, GNU Arm
 toolchain, and `luatos-cli`. Users should not need xmake, LuatOS source, or

@@ -91,10 +91,11 @@ function Copy-SmokeLibrary {
 function Assert-InstalledPlatformShape {
     param([Parameter(Mandatory = $true)][string]$PlatformRoot)
 
-    $requiredExample = Join-Path $PlatformRoot "examples\01.Basics\Blink\Blink.ino"
+    $requiredExample = Join-Path $PlatformRoot "libraries\AIR780\examples\01.Basics\Blink\Blink.ino"
     Assert-File -Path $requiredExample -Description "installed Blink example"
 
     $unexpectedPaths = @(
+        (Join-Path $PlatformRoot "examples"),
         (Join-Path $PlatformRoot "examples\00.Core"),
         (Join-Path $PlatformRoot "examples\99.Experimental"),
         (Join-Path $PlatformRoot "libraries\ArduinoJson"),
@@ -105,6 +106,19 @@ function Assert-InstalledPlatformShape {
         if (Test-Path -LiteralPath $path) {
             throw "Unexpected release package content was installed: $path"
         }
+    }
+}
+
+function Assert-Air780LibraryExamples {
+    $examplesOutput = (& $arduinoCliFullPath --config-file $configPath lib examples AIR780 --fqbn air780:air780:air780epm_dev 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        throw "arduino-cli lib examples AIR780 failed: $examplesOutput"
+    }
+    if (-not $examplesOutput.Contains("AIR780 (air780:air780@0.1.0)")) {
+        throw "AIR780 platform library examples were not listed for the AIR780 board: $examplesOutput"
+    }
+    if (-not $examplesOutput.Contains("examples\01.Basics\") -or -not $examplesOutput.Contains("Blink")) {
+        throw "AIR780 Blink example was not listed by arduino-cli: $examplesOutput"
     }
 }
 
@@ -180,7 +194,9 @@ directories:
 
     $installedPlatformRoot = Join-Path $dataDir "packages\air780\hardware\air780\0.1.0"
     Assert-InstalledPlatformShape -PlatformRoot $installedPlatformRoot
-    $installedBlink = Join-Path $installedPlatformRoot "examples\01.Basics\Blink"
+    Assert-Air780LibraryExamples
+
+    $installedBlink = Join-Path $installedPlatformRoot "libraries\AIR780\examples\01.Basics\Blink"
     if (-not (Test-Path -LiteralPath $installedBlink -PathType Container)) {
         throw "Installed Blink example was not found: $installedBlink"
     }

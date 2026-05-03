@@ -16,6 +16,7 @@ param(
         "12.Sleep"
     ),
     [string]$LibrariesDirectory = ".\libraries",
+    [string]$ExampleLibraryName = "AIR780",
     [string[]]$PackageLibraries = @(),
     [string]$OutputDirectory = ".\dist\releases",
     [string]$Version = "0.1.0",
@@ -65,6 +66,56 @@ function Get-RepoRelativePath {
     param([Parameter(Mandatory = $true)][string]$Path)
 
     return [System.IO.Path]::GetRelativePath($repoRoot, ([System.IO.Path]::GetFullPath($Path)))
+}
+
+function Copy-PackagedExamples {
+    param([Parameter(Mandatory = $true)][string]$DestinationExamplesRoot)
+
+    New-Item -ItemType Directory -Force -Path $DestinationExamplesRoot | Out-Null
+    foreach ($exampleDirectory in @($PackageExampleDirectories)) {
+        if ([string]::IsNullOrWhiteSpace($exampleDirectory)) {
+            continue
+        }
+        $exampleRoot = Join-Path $examplesRoot $exampleDirectory
+        if (Test-Path -LiteralPath $exampleRoot -PathType Container) {
+            Copy-Item -LiteralPath $exampleRoot -Destination (Join-Path $DestinationExamplesRoot $exampleDirectory) -Recurse -Force
+        }
+    }
+}
+
+function New-ExampleLibrary {
+    param([Parameter(Mandatory = $true)][string]$DestinationLibrariesRoot)
+
+    if ([string]::IsNullOrWhiteSpace($ExampleLibraryName)) {
+        return
+    }
+
+    $libraryRoot = Join-Path $DestinationLibrariesRoot $ExampleLibraryName
+    $sourceRoot = Join-Path $libraryRoot "src"
+    New-Item -ItemType Directory -Force -Path $sourceRoot | Out-Null
+
+    $libraryProperties = @"
+name=$ExampleLibraryName
+version=$Version
+author=AIR780 Arduino Core Contributors
+maintainer=AIR780 Arduino Core Contributors
+sentence=Examples for AIR780 Arduino boards.
+paragraph=Board examples for the AIR780 Arduino Core package.
+category=Other
+url=https://github.com/aix402/air780exx-arduino-core
+architectures=air780
+"@
+    [System.IO.File]::WriteAllText(
+        (Join-Path $libraryRoot "library.properties"),
+        ($libraryProperties + "`n"),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    [System.IO.File]::WriteAllText(
+        (Join-Path $sourceRoot "$ExampleLibraryName.h"),
+        "#pragma once`n",
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    Copy-PackagedExamples -DestinationExamplesRoot (Join-Path $libraryRoot "examples")
 }
 
 $platformRoot = Resolve-RepoPath $PlatformDirectory
@@ -119,22 +170,11 @@ try {
     Get-ChildItem -LiteralPath $platformRoot -Force | ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination $stagingPlatformRoot -Recurse -Force
     }
-    if (Test-Path -LiteralPath $examplesRoot -PathType Container) {
-        $stagingExamplesRoot = Join-Path $stagingPlatformRoot "examples"
-        New-Item -ItemType Directory -Force -Path $stagingExamplesRoot | Out-Null
-        foreach ($exampleDirectory in @($PackageExampleDirectories)) {
-            if ([string]::IsNullOrWhiteSpace($exampleDirectory)) {
-                continue
-            }
-            $exampleRoot = Join-Path $examplesRoot $exampleDirectory
-            if (Test-Path -LiteralPath $exampleRoot -PathType Container) {
-                Copy-Item -LiteralPath $exampleRoot -Destination (Join-Path $stagingExamplesRoot $exampleDirectory) -Recurse -Force
-            }
-        }
-    }
+    $stagingLibrariesRoot = Join-Path $stagingPlatformRoot "libraries"
+    New-Item -ItemType Directory -Force -Path $stagingLibrariesRoot | Out-Null
+    New-ExampleLibrary -DestinationLibrariesRoot $stagingLibrariesRoot
+
     if (Test-Path -LiteralPath $librariesRoot -PathType Container) {
-        $stagingLibrariesRoot = Join-Path $stagingPlatformRoot "libraries"
-        New-Item -ItemType Directory -Force -Path $stagingLibrariesRoot | Out-Null
         foreach ($libraryName in @($PackageLibraries)) {
             if ([string]::IsNullOrWhiteSpace($libraryName)) {
                 continue
@@ -170,6 +210,7 @@ $releaseManifest = [ordered]@{
     platform_directory = Get-RepoRelativePath $platformRoot
     examples_directory = if (Test-Path -LiteralPath $examplesRoot -PathType Container) { Get-RepoRelativePath $examplesRoot } else { $null }
     packaged_example_directories = @($PackageExampleDirectories)
+    packaged_example_library = $ExampleLibraryName
     libraries_directory = if (Test-Path -LiteralPath $librariesRoot -PathType Container) { Get-RepoRelativePath $librariesRoot } else { $null }
     packaged_libraries = @($PackageLibraries)
     platform_archive_root = $PlatformArchiveRoot
