@@ -134,6 +134,10 @@ The `v0.1.1` public GitHub release has passed:
 - installed-package `AIR780 > 01.Basics > Blink` compile;
 - published package index download and SHA256 verification;
 - published CSDK tool asset HEAD check showing `41750759` bytes.
+- Arduino IDE Boards Manager upgrade from installed `0.1.0` to `0.1.1`;
+- Arduino IDE `AIR780 > 01.Basics > Blink` compile after upgrade;
+- Arduino IDE upload to AIR780EPM hardware after upgrade;
+- Blink runtime verification on AIR780EPM hardware after upgrade.
 
 The earlier `v0.1.0` public GitHub release passed:
 

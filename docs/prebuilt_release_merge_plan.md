@@ -144,6 +144,10 @@ Already passed on this branch:
 - Public GitHub `v0.1.1` package index and asset availability verification.
 - Exact `v0.1.1` local package-index install smoke with no-toolchain CSDK tool.
 - `v0.1.1` installed-package Blink compile.
+- Arduino IDE Boards Manager upgrade from installed `0.1.0` to `0.1.1`.
+- Arduino IDE `AIR780 > 01.Basics > Blink` compile after `v0.1.1` upgrade.
+- Arduino IDE upload to AIR780EPM hardware after `v0.1.1` upgrade.
+- Blink runtime verification on AIR780EPM hardware after `v0.1.1` upgrade.
 
 ## Recommended Merge Procedure
 
