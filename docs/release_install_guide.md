@@ -124,7 +124,11 @@ The `v0.1.0-rc5` public GitHub release candidate has passed:
 - local package-index install smoke from a generated `127.0.0.1` index;
 - online package-index install from the GitHub Release URL using
   `network.proxy`;
-- installed-package `AIR780 > 01.Basics > Blink` compile.
+- installed-package `AIR780 > 01.Basics > Blink` compile;
+- Arduino IDE download and install;
+- Arduino IDE `AIR780 > 01.Basics > Blink` compile;
+- Arduino IDE upload to AIR780EPM hardware;
+- Blink runtime verification on AIR780EPM hardware.
 
 The earlier `v0.1.0-rc4` candidate also passed Arduino IDE install,
 `AIR780 > 01.Basics > Blink` compile, and upload on AIR780EPM hardware.
