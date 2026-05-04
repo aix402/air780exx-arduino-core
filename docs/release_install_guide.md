@@ -33,7 +33,7 @@ uses a temporary `127.0.0.1` URL and is not a publishable URL.
 Current public package index:
 
 ```text
-https://github.com/aix402/air780-arduino-package/releases/download/v0.1.0/package_air780_index.json
+https://github.com/aix402/air780-arduino-package/releases/download/v0.1.1/package_air780_index.json
 ```
 
 ## Proxy Notes
@@ -108,18 +108,34 @@ Before publishing a package index, run:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1
 ```
 
-The gate regenerates the platform and `luatos-cli` archives, generates the
-draft package index, installs the package into an isolated Arduino15-like data
-directory, verifies the installed platform shape, compiles installed-package
-`Blink` with Arduino CLI's default build path, then compiles
-`ComplexLibraryProbe` with a temporary sketchbook library to keep third-party
-library coverage out of the published example menu.
+The gate regenerates the no-toolchain CSDK ABI archive, platform archive, GNU
+Arm toolchain archive, and `luatos-cli` archive, generates the draft package
+index, installs the package into an isolated Arduino15-like data directory,
+verifies the installed platform shape, verifies the CSDK tool does not contain a
+bundled `toolchain` directory, compiles installed-package `Blink` with Arduino
+CLI's default build path, then compiles `ComplexLibraryProbe` with a temporary
+sketchbook library to keep third-party library coverage out of the published
+example menu.
 
 Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in
 `dist\releases`.
 
-The `v0.1.0` public GitHub release has passed:
+The `v0.1.1` public GitHub release fixes the `air780epm-csdk` tool archive so
+it no longer bundles the GNU Arm toolchain. The CSDK tool archive is about
+39.82 MiB instead of about 234.48 MiB, and the package uses the separate
+`air780:gnu-rm@10.2.1-ec718` tool dependency.
+
+The `v0.1.1` public GitHub release has passed:
+
+- local package-index install smoke from generated `v0.1.1` assets;
+- installed CSDK tool shape verification: `toolchain.source=external-tool` and
+  no bundled `toolchain` directory;
+- installed-package `AIR780 > 01.Basics > Blink` compile;
+- published package index download and SHA256 verification;
+- published CSDK tool asset HEAD check showing `41750759` bytes.
+
+The earlier `v0.1.0` public GitHub release passed:
 
 - online package-index install from the GitHub Release URL using
   `network.proxy`;

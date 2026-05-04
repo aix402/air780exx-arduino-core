@@ -3,7 +3,9 @@
 This note records the merge boundary for `codex/abi-only-wrapper-experiment`
 after `v0.1.0-rc5` passed public GitHub release install, Arduino IDE `Blink`
 compile, upload, and runtime verification on AIR780EPM hardware. The same
-package shape was then promoted to the public `v0.1.0` release.
+package shape was then promoted to the public `v0.1.0` release. The follow-up
+`v0.1.1` release corrected the release packaging so `air780epm-csdk` no longer
+bundles the GNU Arm toolchain.
 
 ## Merge Target
 
@@ -116,6 +118,10 @@ The Boards Manager tool packages provide:
 
 Normal users should not need xmake, LuatOS source, or `luatos-soc-2024` source
 for sketch compile/link/upload.
+The `air780:air780epm-csdk` tool package must use an external GNU Arm toolchain
+manifest (`toolchain.source=external-tool`) and must not contain a bundled
+`toolchain` directory. The GNU Arm toolchain is provided only by
+`air780:gnu-rm`.
 
 ## Validated Gates
 
@@ -135,6 +141,9 @@ Already passed on this branch:
 - Blink runtime verification on AIR780EPM hardware.
 - Public GitHub `v0.1.0` online package-index install smoke.
 - Public GitHub `v0.1.0` installed-package Blink compile.
+- Public GitHub `v0.1.1` package index and asset availability verification.
+- Exact `v0.1.1` local package-index install smoke with no-toolchain CSDK tool.
+- `v0.1.1` installed-package Blink compile.
 
 ## Recommended Merge Procedure
 

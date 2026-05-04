@@ -383,17 +383,24 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebu
 Package the verified distribution for release:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
+  -Clean `
+  -PlatformVersion 0.1.1 `
+  -CsdkVersion 0.1.1 `
+  -BaseUrl https://github.com/aix402/air780-arduino-package/releases/download/v0.1.1
 ```
 
-The package script writes three release artifacts under `dist\releases`:
+The release preparation script exports a no-toolchain CSDK distribution, then
+writes the Boards Manager upload set under `dist\release-candidate` by default:
 
-- `csdk-prebuilt-air780epm-<version>.zip`
-- `csdk-prebuilt-air780epm-<version>.zip.sha256`
-- `csdk-prebuilt-air780epm-<version>.manifest.json`
+- `package_air780_index.json`
+- `air780-arduino-platform-<version>.zip`
+- `csdk-prebuilt-air780epm-<version>-notoolchain-toolroot.zip`
+- `gnu-rm-10.2.1-ec718.zip`
+- `luatos-cli-1.8.0.zip`
 
-By default `<version>` is derived from the current Git branch and short commit.
-Pass `-Version <name>` when cutting a named release.
+The CSDK tool archive must not contain `air780epm-csdk\toolchain`; GNU Arm is
+packaged separately as `air780:gnu-rm`.
 
 Package-index install acceptance:
 
@@ -428,6 +435,7 @@ Verified in this experiment:
 - Boards Manager-style package-index install into an isolated Arduino15-like directory.
 - Package-index-installed `Blink` and `ComplexLibraryProbe` compile/package outputs.
 - GitHub `v0.1.0-rc4` release-candidate install in Arduino IDE with `File > Examples > AIR780EPM Dev Board Examples > AIR780 > 01.Basics > Blink`.
+- GitHub `v0.1.1` no-toolchain CSDK package shape and installed-package Blink compile.
 - Arduino IDE package-installed `Blink` compile and upload from `v0.1.0-rc4`.
 
 ## Key Constraints
