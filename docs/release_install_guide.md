@@ -30,10 +30,10 @@ The package index URL must point to the published
 `package_air780_index.draft.json` generated during release testing
 uses a temporary `127.0.0.1` URL and is not a publishable URL.
 
-Current public release-candidate index:
+Current public package index:
 
 ```text
-https://github.com/aix402/air780-arduino-package/releases/download/v0.1.0-rc5/package_air780_index.json
+https://github.com/aix402/air780-arduino-package/releases/download/v0.1.0/package_air780_index.json
 ```
 
 ## Proxy Notes
@@ -119,7 +119,13 @@ Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in
 `dist\releases`.
 
-The `v0.1.0-rc5` public GitHub release candidate has passed:
+The `v0.1.0` public GitHub release has passed:
+
+- online package-index install from the GitHub Release URL using
+  `network.proxy`;
+- installed-package `AIR780 > 01.Basics > Blink` compile.
+
+The earlier `v0.1.0-rc5` public GitHub release candidate passed:
 
 - local package-index install smoke from a generated `127.0.0.1` index;
 - online package-index install from the GitHub Release URL using

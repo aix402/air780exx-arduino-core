@@ -1,8 +1,9 @@
 # CSDK Prebuilt Release Merge Plan
 
 This note records the merge boundary for `codex/abi-only-wrapper-experiment`
-after `v0.1.0-rc4` passed public GitHub release install, Arduino IDE `Blink`
-compile, and upload on AIR780EPM hardware.
+after `v0.1.0-rc5` passed public GitHub release install, Arduino IDE `Blink`
+compile, upload, and runtime verification on AIR780EPM hardware. The same
+package shape was then promoted to the public `v0.1.0` release.
 
 ## Merge Target
 
@@ -86,8 +87,8 @@ target branch by hand:
 - `libraries\ArduinoJson\`
 - `log\` and `logs\`
 
-The release files for `v0.1.0-rc4` live under `dist\release-candidate`, but
-they are generated release assets, not source.
+The generated release files live under `dist\release-*` directories, but they
+are generated release assets, not source.
 
 ## Release Package Boundary
 
@@ -127,10 +128,13 @@ Already passed on this branch:
   - OtaApiReport
   - SleepReport
 - `scripts\verify_package_index_install.ps1 -Clean -KeepSmokeRoot`
-- Exact `v0.1.0-rc4` release-candidate local package-index install smoke.
-- Public GitHub `v0.1.0-rc4` Arduino IDE install.
+- Exact `v0.1.0-rc5` release-candidate local package-index install smoke.
+- Public GitHub `v0.1.0-rc5` Arduino IDE install.
 - Arduino IDE `AIR780 > 01.Basics > Blink` compile.
 - Arduino IDE upload to AIR780EPM hardware.
+- Blink runtime verification on AIR780EPM hardware.
+- Public GitHub `v0.1.0` online package-index install smoke.
+- Public GitHub `v0.1.0` installed-package Blink compile.
 
 ## Recommended Merge Procedure
 
