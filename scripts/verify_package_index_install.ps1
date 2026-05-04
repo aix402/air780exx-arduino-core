@@ -206,7 +206,7 @@ try {
     $config = @"
 board_manager:
   additional_urls:
-    - $baseUrl/package_air780_index.draft.json
+    - $baseUrl/package_air780_index.json
 directories:
   data: $($dataDir.Replace("\", "/"))
   downloads: $($downloadsDir.Replace("\", "/"))
