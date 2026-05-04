@@ -1,6 +1,10 @@
 param(
     [string]$ArduinoCliPath = ".\tools\arduino-cli-release\arduino-cli.exe",
     [string]$SmokeRoot = "$env:LOCALAPPDATA\Arduino15-air780-smoke",
+    [string]$PlatformVersion = "0.1.1",
+    [string]$CsdkVersion = "0.1.1",
+    [string]$GnuRmVersion = "10.2.1-ec718",
+    [string]$LuatOSCliVersion = "1.8.0",
     [int]$Port = 8766,
     [switch]$Clean,
     [switch]$KeepSmokeRoot
@@ -49,48 +53,6 @@ function Invoke-ArduinoCli {
     & $arduinoCliFullPath @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "arduino-cli failed with exit code $LASTEXITCODE`: $($Arguments -join ' ')"
-    }
-}
-
-function Ensure-CsdkPrebuiltReleaseInputs {
-    $releaseDir = Resolve-RepoPath ".\dist\releases"
-    $distributionManifest = Resolve-RepoPath ".\dist\csdk-prebuilt-air780epm\arduino_export_manifest.json"
-    $csdkArchive = Get-ChildItem -LiteralPath $releaseDir -Filter "csdk-prebuilt-air780epm-*-notoolchain-toolroot.zip" -File -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    $gnuRmArchive = Join-Path $releaseDir "gnu-rm-10.2.1-ec718.zip"
-
-    if (($null -ne $csdkArchive) -and (Test-Path -LiteralPath $gnuRmArchive -PathType Leaf)) {
-        return
-    }
-
-    if (-not (Test-Path -LiteralPath $distributionManifest -PathType Leaf)) {
-        Invoke-CheckedPwshScript `
-            -Description "Export CSDK prebuilt distribution" `
-            -ScriptPath (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1")
-    }
-
-    Assert-File -Path $distributionManifest -Description "CSDK prebuilt distribution manifest"
-
-    if ($null -eq $csdkArchive) {
-        Invoke-CheckedPwshScript `
-            -Description "Package CSDK prebuilt tool archive" `
-            -ScriptPath (Join-Path $PSScriptRoot "package_csdk_prebuilt_distribution.ps1") `
-            -Arguments @(
-                "-Version", "0.1.0-notoolchain-toolroot",
-                "-ArchiveLayout", "ToolRoot",
-                "-ToolArchiveRoot", "air780epm-csdk",
-                "-Clean"
-            )
-    }
-
-    if (-not (Test-Path -LiteralPath $gnuRmArchive -PathType Leaf)) {
-        Invoke-CheckedPwshScript `
-            -Description "Package GNU Arm toolchain archive" `
-            -ScriptPath (Join-Path $PSScriptRoot "package_gnu_rm_toolchain.ps1") `
-            -Arguments @(
-                "-Version", "10.2.1-ec718",
-                "-Clean"
-            )
     }
 }
 
@@ -165,12 +127,28 @@ function Assert-InstalledPlatformShape {
     }
 }
 
+function Assert-InstalledCsdkToolShape {
+    param([Parameter(Mandatory = $true)][string]$ToolRoot)
+
+    Assert-File `
+        -Path (Join-Path $ToolRoot "arduino_export_manifest.json") `
+        -Description "installed CSDK tool manifest"
+
+    $manifest = Get-Content -Raw -LiteralPath (Join-Path $ToolRoot "arduino_export_manifest.json") | ConvertFrom-Json
+    if ([string]$manifest.toolchain.source -ne "external-tool") {
+        throw "Installed CSDK tool should use the external GNU Arm toolchain package, got: $($manifest.toolchain.source)"
+    }
+    if (Test-Path -LiteralPath (Join-Path $ToolRoot "toolchain") -PathType Container) {
+        throw "Installed CSDK tool unexpectedly contains a bundled toolchain: $ToolRoot"
+    }
+}
+
 function Assert-Air780LibraryExamples {
     $examplesOutput = (& $arduinoCliFullPath --config-file $configPath lib examples AIR780 --fqbn air780:air780:air780epm_dev 2>&1 | Out-String)
     if ($LASTEXITCODE -ne 0) {
         throw "arduino-cli lib examples AIR780 failed: $examplesOutput"
     }
-    if (-not $examplesOutput.Contains("AIR780 (air780:air780@0.1.0)")) {
+    if (-not $examplesOutput.Contains("AIR780 (air780:air780@$PlatformVersion)")) {
         throw "AIR780 platform library examples were not listed for the AIR780 board: $examplesOutput"
     }
     if (-not $examplesOutput.Contains("examples\01.Basics\") -or -not $examplesOutput.Contains("Blink")) {
@@ -189,25 +167,21 @@ else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $SmokeRoot))
 }
 
-Ensure-CsdkPrebuiltReleaseInputs
-
-Invoke-CheckedPwshScript `
-    -Description "Package Arduino platform archive" `
-    -ScriptPath (Join-Path $PSScriptRoot "package_arduino_platform.ps1") `
-    -Arguments @("-Version", "0.1.0", "-Clean")
-
-Invoke-CheckedPwshScript `
-    -Description "Package luatos-cli tool archive" `
-    -ScriptPath (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") `
-    -Arguments @("-Clean")
-
 $baseUrl = "http://127.0.0.1:$Port"
 Invoke-CheckedPwshScript `
-    -Description "Generate package index draft" `
-    -ScriptPath (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") `
-    -Arguments @("-BaseUrl", $baseUrl)
+    -Description "Prepare local package-index release assets" `
+    -ScriptPath (Join-Path $PSScriptRoot "prepare_release_candidate.ps1") `
+    -Arguments @(
+        "-Clean",
+        "-OutputDirectory", ".\dist\release-smoke",
+        "-BaseUrl", $baseUrl,
+        "-PlatformVersion", $PlatformVersion,
+        "-CsdkVersion", $CsdkVersion,
+        "-GnuRmVersion", $GnuRmVersion,
+        "-LuatOSCliVersion", $LuatOSCliVersion
+    )
 
-$releaseDir = Join-Path $repoRoot "dist\releases"
+$releaseDir = Join-Path $repoRoot "dist\release-smoke"
 $server = Start-Process `
     -FilePath "py" `
     -ArgumentList @("-3", "-m", "http.server", [string]$Port, "--bind", "127.0.0.1") `
@@ -244,11 +218,17 @@ directories:
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "update-index")
     & $arduinoCliFullPath --config-file $configPath core uninstall air780:air780 2>$null | Write-Output
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "install", "air780:air780")
-    $installedLuatOSCli = Join-Path $dataDir "packages\air780\tools\luatos-cli\1.8.0\luatos-cli.exe"
+    $installedLuatOSCli = Join-Path $dataDir "packages\air780\tools\luatos-cli\$LuatOSCliVersion\luatos-cli.exe"
     Assert-File -Path $installedLuatOSCli -Description "package-index installed luatos-cli"
     & $installedLuatOSCli --version | Write-Output
 
-    $installedPlatformRoot = Join-Path $dataDir "packages\air780\hardware\air780\0.1.0"
+    $installedCsdkToolRoot = Join-Path $dataDir "packages\air780\tools\air780epm-csdk\$CsdkVersion"
+    Assert-InstalledCsdkToolShape -ToolRoot $installedCsdkToolRoot
+
+    $installedGnuRm = Join-Path $dataDir "packages\air780\tools\gnu-rm\$GnuRmVersion\bin\arm-none-eabi-gcc.exe"
+    Assert-File -Path $installedGnuRm -Description "package-index installed GNU Arm GCC"
+
+    $installedPlatformRoot = Join-Path $dataDir "packages\air780\hardware\air780\$PlatformVersion"
     Assert-InstalledPlatformShape -PlatformRoot $installedPlatformRoot
     Assert-Air780LibraryExamples
 

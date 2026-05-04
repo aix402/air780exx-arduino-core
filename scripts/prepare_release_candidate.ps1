@@ -1,6 +1,7 @@
 param(
     [string]$OutputDirectory = ".\dist\release-candidate",
     [string]$ReleasesDirectory = ".\dist\releases",
+    [string]$CsdkDistributionDirectory = ".\dist\csdk-prebuilt-air780epm-notoolchain",
     [string]$BaseUrl = "https://example.com/air780/arduino/releases",
     [string]$PlatformVersion = "0.1.0",
     [string]$CsdkVersion = "0.1.0",
@@ -40,6 +41,27 @@ if ($Clean -and (Test-Path -LiteralPath $outputRoot)) {
 }
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 
+Write-Host "==> Export no-toolchain CSDK prebuilt distribution"
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1") `
+    -OutputDirectory $CsdkDistributionDirectory `
+    -NoToolchain `
+    -Clean
+if ($LASTEXITCODE -ne 0) {
+    throw "No-toolchain CSDK prebuilt distribution export failed with exit code $LASTEXITCODE"
+}
+
+Write-Host "==> Package no-toolchain CSDK tool archive"
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_csdk_prebuilt_distribution.ps1") `
+    -DistributionDirectory $CsdkDistributionDirectory `
+    -OutputDirectory $releasesRoot `
+    -Version "$CsdkVersion-notoolchain-toolroot" `
+    -ArchiveLayout ToolRoot `
+    -ToolArchiveRoot "air780epm-csdk" `
+    -Clean
+if ($LASTEXITCODE -ne 0) {
+    throw "No-toolchain CSDK tool archive packaging failed with exit code $LASTEXITCODE"
+}
+
 Write-Host "==> Package Arduino platform archive"
 & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_arduino_platform.ps1") `
     -OutputDirectory $releasesRoot `
@@ -59,16 +81,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $platformArchive = Join-Path $releasesRoot "air780-arduino-platform-$PlatformVersion.zip"
-$csdkArchive = Get-ChildItem -LiteralPath $releasesRoot -Filter "csdk-prebuilt-air780epm-*-notoolchain-toolroot.zip" -File |
-    Sort-Object LastWriteTimeUtc -Descending |
-    Select-Object -First 1
+$csdkArchive = Join-Path $releasesRoot "csdk-prebuilt-air780epm-$CsdkVersion-notoolchain-toolroot.zip"
 $gnuRmArchive = Join-Path $releasesRoot "gnu-rm-$GnuRmVersion.zip"
 $luatosCliArchive = Join-Path $releasesRoot "luatos-cli-$LuatOSCliVersion.zip"
 
 Assert-File -Path $platformArchive -Description "Arduino platform archive"
-if ($null -eq $csdkArchive) {
-    throw "CSDK ABI tool archive was not found in $releasesRoot"
-}
+Assert-File -Path $csdkArchive -Description "CSDK ABI tool archive"
 Assert-File -Path $gnuRmArchive -Description "GNU Arm toolchain archive"
 Assert-File -Path $luatosCliArchive -Description "luatos-cli archive"
 
@@ -79,7 +97,7 @@ Write-Host "==> Generate release candidate package index"
     -OutputPath $candidateIndex `
     -BaseUrl $BaseUrl `
     -PlatformArchive $platformArchive `
-    -CsdkArchive $csdkArchive.FullName `
+    -CsdkArchive $csdkArchive `
     -GnuRmArchive $gnuRmArchive `
     -LuatOSCliArchive $luatosCliArchive `
     -PlatformVersion $PlatformVersion `
@@ -93,7 +111,7 @@ if ($LASTEXITCODE -ne 0) {
 $releaseFiles = @(
     $candidateIndex,
     $platformArchive,
-    $csdkArchive.FullName,
+    $csdkArchive,
     $gnuRmArchive,
     $luatosCliArchive
 )

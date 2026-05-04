@@ -86,6 +86,12 @@ $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
 if (-not [bool]$manifest.distribution_package) {
     throw "Distribution manifest is missing distribution_package=true: $manifestPath"
 }
+if (([string]$Version -like "*notoolchain*") -and ([string]$manifest.toolchain.source -ne "external-tool")) {
+    throw "Refusing to create a notoolchain archive from a distribution with bundled toolchain: $manifestPath"
+}
+if (([string]$Version -like "*notoolchain*") -and (Test-Path -LiteralPath (Join-Path $distributionRoot "toolchain") -PathType Container)) {
+    throw "Refusing to create a notoolchain archive because the distribution contains toolchain: $distributionRoot"
+}
 
 $commit = Get-GitValue -Arguments @("rev-parse", "HEAD")
 $shortCommit = Get-GitValue -Arguments @("rev-parse", "--short", "HEAD")
