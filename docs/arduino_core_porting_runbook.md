@@ -4,6 +4,15 @@
 
 目标是给下一个模组移植时直接照着推进：先打通最小 C++ / Arduino 运行链路，再逐步验证硬件资源、Arduino API、第三方库、文件系统、休眠、OTA、打包发布。
 
+> 更新说明：本 runbook 记录了早期以桥接方案推进 ML307N-EC / EC718PM
+> 移植时的经验。AIR780EPM 后续已经完成 CSDK/runner 预编译 `.a`、
+> Arduino CLI 标准编译 sketch/core/libraries、Boards Manager 公开发布、
+> IDE 升级验证和主线硬件 Blink 验证。新的通用 SOP 见：
+>
+> - `docs\arduino_porting_sop.md`
+> - `docs\arduino_bridge_convergence_sop.md`
+> - `docs\arduino_release_sop.md`
+
 ## 基本原则
 
 - 先跑通最小闭环，再扩大 API 面。
