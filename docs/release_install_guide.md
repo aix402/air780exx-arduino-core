@@ -139,6 +139,12 @@ The `v0.1.1` public GitHub release has passed:
 - Arduino IDE upload to AIR780EPM hardware after upgrade;
 - Blink runtime verification on AIR780EPM hardware after upgrade.
 
+After merging the prebuilt release work into `main`, the main branch also
+passed a final hardware smoke on AIR780EPM: `scripts\arduino_cli_upload.ps1`
+compiled `examples\01.Basics\Blink`, reset the running module from `COM3` into
+download mode, flashed through the detected `COM7` download port with
+`luatos-cli`, and the board LED blinked at the expected cadence.
+
 The earlier `v0.1.0` public GitHub release passed:
 
 - online package-index install from the GitHub Release URL using

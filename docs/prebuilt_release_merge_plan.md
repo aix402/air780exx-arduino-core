@@ -148,6 +148,9 @@ Already passed on this branch:
 - Arduino IDE `AIR780 > 01.Basics > Blink` compile after `v0.1.1` upgrade.
 - Arduino IDE upload to AIR780EPM hardware after `v0.1.1` upgrade.
 - Blink runtime verification on AIR780EPM hardware after `v0.1.1` upgrade.
+- Post-merge `main` hardware smoke: `scripts\arduino_cli_upload.ps1` compiled
+  `examples\01.Basics\Blink`, flashed from running `COM3` via detected download
+  port `COM7`, and the AIR780EPM LED blinked at the expected cadence.
 
 ## Recommended Merge Procedure
 
