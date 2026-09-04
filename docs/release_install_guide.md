@@ -25,15 +25,15 @@ runner static libraries.
 5. Install `AIR780 Arduino Core`.
 6. Select `AIR780EPM Dev Board`.
 
-The package index URL must point to the published
-`package_air780_index.json`. The local
-`package_air780_index.draft.json` generated during release testing
-uses a temporary `127.0.0.1` URL and is not a publishable URL.
+The package index is a version-controlled file at the public repository root.
+It is a fixed URL; its contents refer to the ZIP files for the current release.
+The local package index generated during release testing uses a temporary
+`127.0.0.1` URL and is not publishable.
 
 Current public package index:
 
 ```text
-https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/package_air780_index.json
+https://raw.githubusercontent.com/aix402/air780exx-arduino-core/main/package_air780_index.json
 ```
 
 ## Proxy Notes
@@ -105,7 +105,7 @@ full flash.
 Before publishing a package index, run:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1
 ```
 
 The gate regenerates the no-toolchain CSDK ABI archive, platform archive, GNU

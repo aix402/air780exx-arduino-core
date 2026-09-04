@@ -44,8 +44,9 @@ SDK:
 - release binaries should be published through GitHub Releases, not committed
   into git
 
-Maintainer scripts support Windows PowerShell 5.1 and PowerShell 7. The
-examples below use the Windows-included `powershell` command.
+Arduino IDE recipes use the Windows-included `powershell` command for normal
+user builds. Maintainers use `pwsh` for release packaging and distribution
+verification.
 
 See [docs/maintainer_notes.md](docs/maintainer_notes.md) for the suggested
 local layout and dependency policy.
@@ -232,7 +233,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk
 Create a release archive from the verified distribution package:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
 ```
 
 This writes the `.zip`, `.zip.sha256`, and `.manifest.json` files under

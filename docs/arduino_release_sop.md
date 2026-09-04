@@ -24,8 +24,8 @@
 - 手工配置 linker script。
 - 手工下载 toolchain。
 
-维护者脚本支持 Windows PowerShell 5.1 和 PowerShell 7；以下命令使用系统自带的
-`powershell`。
+Arduino IDE 用户编译时使用系统自带的 `powershell`。维护者执行发布打包和发布验证时
+使用已验证的 `pwsh`。
 
 ## 发布资产形态
 
@@ -105,8 +105,8 @@ Arduino15\packages\air780\tools\luatos-cli\<version>
 发布前至少跑：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_csdk_prebuilt_arduino_flow.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean -KeepSmokeRoot
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_csdk_prebuilt_arduino_flow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean -KeepSmokeRoot
 ```
 
 第一条验证：
@@ -133,7 +133,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_ind
 有硬件时再跑：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
   -SketchPath .\examples\01.Basics\Blink `
   -ComPort COM3 `
   -Clean
@@ -144,15 +144,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload
 推荐用一个脚本生成干净目录，例如：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
   -Clean `
   -OutputDirectory .\dist\release-v0.2.0 `
   -BaseUrl https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0 `
   -PlatformVersion 0.2.0 `
-  -CsdkVersion 0.2.0
+  -CsdkVersion 0.2.0 `
+  -PublishPackageIndexPath .\package_air780_index.json
 ```
 
-发布目录只应该包含要上传的文件，例如：
+候选目录会包含本地验证所需的 package index，例如：
 
 ```text
 air780-arduino-platform-0.2.0.zip
@@ -167,7 +168,9 @@ release-candidate.manifest.json
 
 - `dist` 是生成目录，不提交到源码仓库。
 - release asset 的 SHA256 必须和 package index 一致。
-- package index URL 必须指向最终公开下载地址，不要发布本地 `127.0.0.1` URL。
+- `package_air780_index.json` 由 `-PublishPackageIndexPath` 同步到仓库根目录，提交到
+  `main`；不要把它作为 GitHub Release asset 上传。
+- package index 内的 ZIP URL 必须指向最终公开下载地址，不要写入本地 `127.0.0.1` URL。
 
 ## GitHub Release 流程
 
@@ -179,17 +182,17 @@ https://github.com/aix402/air780exx-arduino-core
 
 流程：
 
-1. 创建 tag，例如 `v0.2.0`。
-2. 创建 GitHub Release。
-3. 上传所有 release assets。
+1. 将根目录的 `package_air780_index.json` 提交并推送到公开 `main` 分支。
+2. 创建 tag，例如 `v0.2.0`。
+3. 创建 GitHub Release，上传 4 个 ZIP 和可选的 `release-candidate.manifest.json`。
 4. 确认 release 不是 draft，或者明确需要 draft 测试。
-5. 打开 package index URL，确认可下载。
-6. 用浏览器或脚本下载 package index，确认 SHA256 和本地一致。
+5. 打开固定 package index URL，确认可下载。
+6. 用浏览器或脚本下载 package index，确认其中 SHA256 和发布 ZIP 一致。
 
 Boards Manager URL 示例：
 
 ```text
-https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/package_air780_index.json
+https://raw.githubusercontent.com/aix402/air780exx-arduino-core/main/package_air780_index.json
 ```
 
 ## Arduino IDE 验证

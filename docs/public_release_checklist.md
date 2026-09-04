@@ -6,6 +6,7 @@ Use this before publishing or updating the public GitHub repository.
 
 - [ ] Repository name is `air780exx-arduino-core`.
 - [ ] Public repo root contains Arduino-facing source, examples, scripts, and docs.
+- [ ] Root `package_air780_index.json` is committed to the public `main` branch.
 - [ ] `deps/LuatOS` and `deps/luatos-soc-2024` are outside the git repository.
 - [ ] `.gitmodules` does not include maintainer-only SDK trees.
 - [ ] Generated files and large binaries are ignored.
@@ -38,6 +39,6 @@ runner/air780epm_runner/out/air780epm_runner_ec718pm.soc
 
 - [ ] Large zip/toolchain/package files are uploaded to GitHub Releases.
 - [ ] Release asset SHA256 values match the package index.
-- [ ] The package index URL points to the published release, not localhost.
+- [ ] The fixed package index URL points to `main`, not localhost or a versioned Release URL.
 - [ ] Static constructor map check passed after the final runner link.
 - [ ] Arduino IDE or Arduino CLI install smoke has passed.

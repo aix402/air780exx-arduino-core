@@ -7,6 +7,7 @@ param(
     [string]$CsdkVersion = "0.2.0",
     [string]$GnuRmVersion = "10.2.1-ec718",
     [string]$LuatOSCliVersion = "1.8.0",
+    [string]$PublishPackageIndexPath = "",
     [switch]$Clean
 )
 
@@ -132,6 +133,14 @@ Write-Host "==> Generate release candidate package index"
     -LuatOSCliVersion $LuatOSCliVersion
 if ($LASTEXITCODE -ne 0) {
     throw "Package index generation failed with exit code $LASTEXITCODE"
+}
+
+if (-not [string]::IsNullOrWhiteSpace($PublishPackageIndexPath)) {
+    $publishedIndexPath = Resolve-RepoPath $PublishPackageIndexPath
+    if ([System.IO.Path]::GetFullPath($candidateIndex) -ne $publishedIndexPath) {
+        Copy-Item -LiteralPath $candidateIndex -Destination $publishedIndexPath -Force
+    }
+    Write-Host "Published package index: $publishedIndexPath"
 }
 
 $releaseFiles = @(
