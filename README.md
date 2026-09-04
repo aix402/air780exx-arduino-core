@@ -5,6 +5,9 @@ Arduino Core porting workspace for OpenLuat AIR780Ex modules.
 The first supported target is [AIR780EPM](https://docs.openluat.com/air780epm/product/),
 based on the EC718PM chip and the LuatOS CSDK xmake flow.
 
+The Arduino package has been validated on Windows only. macOS and Linux have
+not yet been validated.
+
 ## Repository Name
 
 Suggested GitHub repository name:

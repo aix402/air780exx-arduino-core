@@ -5,6 +5,7 @@ This guide describes the first Windows release-candidate package shape.
 ## Scope
 
 - Host OS: Windows.
+- Validation status: Windows only. macOS and Linux have not been validated.
 - Board package: `air780:air780`.
 - Board: `AIR780EPM Dev Board`.
 - Tool packages installed by Arduino Boards Manager:
@@ -66,9 +67,15 @@ toolchain, and `luatos-cli`. Users should not need xmake, LuatOS source, or
 
 ## Upload
 
-For a normally running board, select the board serial port in Arduino IDE and
-click Upload. On the current AIR780EPM development board this is commonly
-`COM3`, but the exact COM number is assigned by Windows.
+Connect the board by USB. Windows enumerates the running board as a USB virtual
+serial port (a COM port). This normal-mode COM port carries Arduino `Serial`
+logs and is also selected for normal Arduino IDE uploads. It does not require
+an external USB-to-TTL adapter.
+
+For a normally running board, select this COM port in Arduino IDE and click
+Upload. `COM3` is only an observed example; use the COM number currently
+assigned by Windows, including `COM10` and higher. Use the normal `COM10`
+form, not the legacy `\\.\COM10` device-path form.
 
 The upload recipe calls:
 
@@ -79,14 +86,18 @@ luatos-cli flash run --soc <firmware.soc> --port <selected-port>
 ## Boot Mode Recovery Upload
 
 If the firmware is not running and the normal command/log port is unavailable,
-enter EC718 Boot/download mode manually:
+enter EC718 Boot/download mode manually. Windows then enumerates a separate
+EC718 download COM port; its COM number is different from the normal-mode
+port.
 
 1. Hold BOOT.
 2. Press RESET or power-cycle the board.
 3. Release BOOT.
 4. Wait for Windows to enumerate the EC718 download port.
 
-For command-line recovery, use `auto` as the upload port:
+For command-line recovery, use `auto` as the upload port. This avoids needing
+to enter the Boot/download COM number manually, including when it is `COM10`
+or higher:
 
 ```powershell
 arduino-cli compile `
@@ -98,7 +109,16 @@ arduino-cli compile `
 
 This maps to `luatos-cli flash run --port auto`. In the verified release smoke,
 `luatos-cli` detected the EC718 download-mode port as `COM7` and completed a
-full flash.
+full flash. `COM3` for normal mode and `COM7` for download mode are examples
+only; Windows assigns the actual values.
+
+## Logs
+
+Arduino `Serial` logs use the normal-mode USB virtual serial port. For the
+command-line log tool, `luatos-cli log view-binary --port auto --probe` is the
+recommended form because it auto-detects the EC718 log port. When selecting a
+port manually, use the COM number currently assigned by Windows, including
+`COM10` and higher.
 
 ## Release Gate
 
