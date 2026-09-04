@@ -20,11 +20,46 @@ air780exx-arduino-core
 core/air780epm/              Arduino platform files and minimal core
 runner/air780epm_runner/     xmake CSDK runner that hosts setup()/loop()
 examples/                    Arduino CLI compatible examples
+libraries/                   small public helper libraries and probes
+validation_sketches/         compile/runtime regression sketches
 scripts/                     build, upload, and Arduino CLI bridge scripts
-external/LuatOS/             LuatOS submodule
-external/luatos-soc-2024/    AIR780Ex CSDK submodule
+docs/                        public docs, release notes, and maintainer notes
 tools/luatos-cli/            command-line flash/log tool submodule
 ```
+
+## Public Repo Boundary
+
+This workspace is organized so the public Arduino repository contains the
+Arduino-facing source and build automation without embedding the full vendor
+SDK:
+
+- the public source boundary is `core/`, `runner/`, `examples/`, `libraries/`,
+  `validation_sketches/`, `scripts/`, and `docs/`
+- the LuatOS CSDK source tree is a maintainer-only dependency and can live
+  outside the public repo in a sibling `deps/` directory
+- ordinary users should install the published Boards Manager package, which
+  contains the required prebuilt ABI files and tools
+- maintainers need `deps/LuatOS/` and `deps/luatos-soc-2024/` only when
+  rebuilding the SDK-backed artifacts
+- release binaries should be published through GitHub Releases, not committed
+  into git
+
+See [docs/maintainer_notes.md](docs/maintainer_notes.md) for the suggested
+local layout and dependency policy.
+
+## License
+
+The original code in this repository is released under the MIT License. See
+[LICENSE](LICENSE). Third-party components retain their original licenses; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the component list and
+license locations.
+
+## Project Docs
+
+- [Maintainer notes](docs/maintainer_notes.md)
+- [Public release checklist](docs/public_release_checklist.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
 ## Phase 1 Scope
 
@@ -177,7 +212,7 @@ refreshing the prebuilt `.a` artifacts or rebuilding the distribution package.
 Detailed build flow:
 
 - [CSDK prebuilt build flow](docs/csdk_prebuilt_build_flow.md)
-- [CSDK prebuilt feasibility notes](docs/csdk_prebuilt_a_research.md)
+- [Maintainer notes](docs/maintainer_notes.md)
 
 Phase-1 software acceptance:
 

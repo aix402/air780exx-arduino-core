@@ -19,7 +19,7 @@ param(
     [string]$ExampleLibraryName = "AIR780",
     [string[]]$PackageLibraries = @(),
     [string]$OutputDirectory = ".\dist\releases",
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.2.0",
     [string]$PlatformArchiveRoot = "air780",
     [switch]$Clean
 )
@@ -108,7 +108,7 @@ maintainer=AIR780 Arduino Core Contributors
 sentence=Examples for AIR780 Arduino boards.
 paragraph=Board examples for the AIR780 Arduino Core package.
 category=Other
-url=https://github.com/aix402/air780-arduino-package
+url=https://github.com/aix402/air780exx-arduino-core
 architectures=air780
 "@
     [System.IO.File]::WriteAllText(

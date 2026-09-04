@@ -6,12 +6,13 @@
 - Target module: `AIR780EPM`.
 - Chip: `EC718PM`.
 - Build backend: LuatOS CSDK xmake, external-project mode.
-- SDK and LuatOS are git submodules during development.
+- SDK and LuatOS are maintainer-only external dependencies during development.
 - Release packaging should vendor the pinned submodule content into the Boards
   Manager package instead of requiring end users to clone dependencies.
 - USB enumerated serial is the preferred log and flash path.
 - `luatos-cli` is preferred for command-line flash/log validation.
-- `F:\hezhou\luatools\Luatools_v3.exe` remains the manual fallback.
+- A locally installed Luatools executable may be supplied as a manual fallback
+  to `scripts\upload_core.ps1 -LuatoolsPath <path>`.
 
 ## Phase 1 Includes
 
@@ -146,7 +147,7 @@ Arduino IDE 2.x setup:
 powershell -ExecutionPolicy Bypass -File .\scripts\arduino_ide_setup.ps1
 ```
 
-The IDE setup script backs up `C:\Users\cu80u\.arduinoIDE\arduino-cli.yaml` and
+The IDE setup script backs up the user's Arduino IDE configuration file and
 sets its sketchbook `directories.user` to this repository, so the IDE can
 discover `hardware\air780\air780`.
 

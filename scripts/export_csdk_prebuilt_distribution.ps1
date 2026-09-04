@@ -165,10 +165,7 @@ function Copy-FilePreservingRepoPath {
 
     $sourceFull = Get-FullPath $Source
     Assert-File -Path $sourceFull -Description "distribution source file"
-    $relative = Get-RelativePath -BaseRoot $SourceRepoRoot -Path $sourceFull
-    if ($relative.StartsWith("..")) {
-        throw "Refusing to copy file outside source repo root: $sourceFull"
-    }
+    $relative = Get-DistributionRelativePath -Path $sourceFull
     $destination = Join-Path $DestinationRoot $relative
     $destinationDir = Split-Path -Parent $destination
     if ($destinationDir -and -not (Test-Path -LiteralPath $destinationDir)) {
@@ -188,16 +185,43 @@ function Copy-DirectoryPreservingRepoPath {
     if (-not (Test-Path -LiteralPath $sourceFull -PathType Container)) {
         return
     }
-    $relative = Get-RelativePath -BaseRoot $SourceRepoRoot -Path $sourceFull
-    if ($relative.StartsWith("..")) {
-        throw "Refusing to copy directory outside source repo root: $sourceFull"
-    }
+    $relative = Get-DistributionRelativePath -Path $sourceFull
     $destination = Join-Path $DestinationRoot $relative
     $destinationParent = Split-Path -Parent $destination
     if ($destinationParent -and -not (Test-Path -LiteralPath $destinationParent)) {
         New-Item -ItemType Directory -Force -Path $destinationParent | Out-Null
     }
     Copy-Item -LiteralPath $sourceFull -Destination $destinationParent -Recurse -Force
+}
+
+function Test-PathUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Root
+    )
+
+    $rootWithSeparator = $Root
+    if (-not $rootWithSeparator.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $rootWithSeparator += [System.IO.Path]::DirectorySeparatorChar
+    }
+    return $Path.Equals($Root, [System.StringComparison]::OrdinalIgnoreCase) -or
+        $Path.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+function Get-DistributionRelativePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $pathFull = [System.IO.Path]::GetFullPath($Path)
+    foreach ($mapping in @($script:DistributionPathMappings)) {
+        if (Test-PathUnderRoot -Path $pathFull -Root $mapping.Root) {
+            $relative = Get-RelativePath -BaseRoot $mapping.Root -Path $pathFull
+            if ($relative -eq ".") {
+                return $mapping.Prefix
+            }
+            return Join-Path $mapping.Prefix $relative
+        }
+    }
+    throw "Refusing to copy file outside the public repo and configured dependency roots: $pathFull"
 }
 
 function Copy-DirectoryToDestination {
@@ -288,6 +312,15 @@ function ConvertTo-DistributionValue {
         return $null
     }
     if ($Value -is [string]) {
+        if ([System.IO.Path]::IsPathRooted($Value)) {
+            try {
+                $relative = Get-DistributionRelativePath -Path $Value
+                return (Get-FullPath (Join-Path $DestinationRoot $relative))
+            }
+            catch {
+                # Keep non-source absolute values such as external toolchain paths for later handling.
+            }
+        }
         if ($Value.StartsWith($SourceRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
             return ($DestinationRoot + $Value.Substring($SourceRoot.Length))
         }
@@ -343,6 +376,21 @@ Assert-File -Path $manifestFullPath -Description "Arduino/CSDK export manifest"
 $manifest = Get-Content -Raw -LiteralPath $manifestFullPath | ConvertFrom-Json
 
 $sourceRepoRoot = Get-FullPath $manifest.repo_root
+$workspaceRoot = Split-Path $sourceRepoRoot -Parent
+$script:DistributionPathMappings = @(
+    [pscustomobject]@{
+        Root = $sourceRepoRoot
+        Prefix = "."
+    },
+    [pscustomobject]@{
+        Root = Get-FullPath (Join-Path $workspaceRoot "deps\LuatOS")
+        Prefix = "abi\luatos"
+    },
+    [pscustomobject]@{
+        Root = Get-FullPath (Join-Path $workspaceRoot "deps\luatos-soc-2024")
+        Prefix = "abi\sdk"
+    }
+)
 $outputFullDirectory = Get-FullPath $OutputDirectory
 if ($Clean -and (Test-Path -LiteralPath $outputFullDirectory)) {
     $resolvedOutput = Resolve-Path -LiteralPath $outputFullDirectory

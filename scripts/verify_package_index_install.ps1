@@ -1,8 +1,8 @@
 param(
     [string]$ArduinoCliPath = ".\tools\arduino-cli-release\arduino-cli.exe",
     [string]$SmokeRoot = "$env:LOCALAPPDATA\Arduino15-air780-smoke",
-    [string]$PlatformVersion = "0.1.1",
-    [string]$CsdkVersion = "0.1.1",
+    [string]$PlatformVersion = "0.2.0",
+    [string]$CsdkVersion = "0.2.0",
     [string]$GnuRmVersion = "10.2.1-ec718",
     [string]$LuatOSCliVersion = "1.8.0",
     [int]$Port = 8766,
@@ -216,7 +216,10 @@ directories:
 
     Write-Host "==> Install platform from package index"
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "update-index")
-    & $arduinoCliFullPath --config-file $configPath core uninstall air780:air780 2>$null | Write-Output
+    $installedAir780Root = Join-Path $dataDir "packages\air780\hardware\air780"
+    if (Test-Path -LiteralPath $installedAir780Root -PathType Container) {
+        Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "uninstall", "air780:air780")
+    }
     Invoke-ArduinoCli -Arguments @("--config-file", $configPath, "core", "install", "air780:air780")
     $installedLuatOSCli = Join-Path $dataDir "packages\air780\tools\luatos-cli\$LuatOSCliVersion\luatos-cli.exe"
     Assert-File -Path $installedLuatOSCli -Description "package-index installed luatos-cli"
@@ -242,6 +245,20 @@ directories:
         -SketchPath $installedBlink `
         -BuildName "Blink" `
         -UseDefaultBuildPath
+
+    Write-Host "==> Install PubSubClient from the Arduino library index"
+    Invoke-ArduinoCli -Arguments @(
+        "--config-file", $configPath,
+        "lib", "install", "PubSubClient"
+    )
+
+    $installedMqtts = Join-Path $installedPlatformRoot "libraries\AIR780\examples\08.Network\MqttsLoopback"
+    $installedMqttsReadme = Join-Path $installedMqtts "README.md"
+    Assert-File -Path $installedMqttsReadme -Description "installed MqttsLoopback README"
+    Write-Host "==> Compile MqttsLoopback from installed package"
+    Invoke-SmokeCompile `
+        -SketchPath $installedMqtts `
+        -BuildName "MqttsLoopback"
 
     Copy-SmokeLibrary -LibraryName "Air780EpmComplexLibProbe"
     Write-Host "==> Compile ComplexLibraryProbe from installed package"

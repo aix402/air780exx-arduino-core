@@ -110,6 +110,20 @@ function Invoke-DistributionCompile {
         -Description "$BuildName direct-link response"
 }
 
+$prebuildArgs = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", (Join-Path $PSScriptRoot "prebuild_csdk.ps1")
+)
+if ($Clean) {
+    $prebuildArgs += "-Clean"
+}
+Write-Host "==> Build clean CSDK/runner prebuild"
+& pwsh @prebuildArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "CSDK/runner prebuild failed with exit code $LASTEXITCODE"
+}
+
 Write-Host "==> Export CSDK prebuilt distribution"
 $exportArgs = @(
     "-NoProfile",

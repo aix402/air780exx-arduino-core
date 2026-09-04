@@ -3,7 +3,7 @@ param(
     [string]$ComPort,
     [string]$PackageFile = ".\runner\air780epm_runner\out\air780epm_runner.binpkg",
     [string]$SocFile = ".\runner\air780epm_runner\out\air780epm_runner_ec718pm.soc",
-    [string]$LuatoolsPath = "F:\hezhou\luatools\Luatools_v3.exe",
+    [string]$LuatoolsPath,
     [string]$LuatOSCliToolRoot,
     [string]$LuatOSCliPath = ".\tools\luatos-cli-release\luatos-cli.exe",
     [string]$LuatOSCliSourcePath = ".\tools\luatos-cli\target\release\luatos-cli.exe"
@@ -62,8 +62,10 @@ if (-not [string]::IsNullOrWhiteSpace($LuatOSCliToolRoot)) {
 }
 Write-Output "Install release build: powershell -ExecutionPolicy Bypass -File .\scripts\install_luatos_cli_release.ps1"
 Write-Output "Package file: $packageFullPath"
-Write-Output "Manual fallback: open $LuatoolsPath and flash the package on COM3."
-if (Test-Path -LiteralPath $LuatoolsPath) {
+if (-not [string]::IsNullOrWhiteSpace($LuatoolsPath)) {
+    Write-Output "Manual fallback: open $LuatoolsPath and flash the package on COM3."
+}
+if (-not [string]::IsNullOrWhiteSpace($LuatoolsPath) -and (Test-Path -LiteralPath $LuatoolsPath)) {
     Start-Process -FilePath $LuatoolsPath
 }
 exit 2

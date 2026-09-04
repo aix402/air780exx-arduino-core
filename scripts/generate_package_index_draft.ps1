@@ -1,12 +1,12 @@
 param(
     [string]$OutputPath = ".\dist\releases\package_air780_index.draft.json",
-    [string]$BaseUrl = "https://example.com/air780/arduino/releases",
+    [string]$BaseUrl = "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0",
     [string]$PlatformArchive,
     [string]$CsdkArchive,
     [string]$GnuRmArchive,
     [string]$LuatOSCliArchive,
-    [string]$PlatformVersion = "0.1.0",
-    [string]$CsdkVersion = "0.1.0",
+    [string]$PlatformVersion = "0.2.0",
+    [string]$CsdkVersion = "0.2.0",
     [string]$GnuRmVersion = "10.2.1-ec718",
     [string]$LuatOSCliVersion = "1.8.0"
 )
@@ -96,7 +96,7 @@ $platform = [ordered]@{
     version = $PlatformVersion
     category = "Contributed"
     help = [ordered]@{
-        online = "https://github.com/aix402/air780-arduino-package"
+        online = "https://github.com/aix402/air780exx-arduino-core"
     }
     boards = @(
         [ordered]@{ name = "AIR780EPM Dev Board" }
@@ -130,7 +130,7 @@ $index = [ordered]@{
         [ordered]@{
             name = "air780"
             maintainer = "AIR780 Arduino Core Contributors"
-            websiteURL = "https://github.com/aix402/air780-arduino-package"
+            websiteURL = "https://github.com/aix402/air780exx-arduino-core"
             email = ""
             platforms = @($platform)
             tools = @(

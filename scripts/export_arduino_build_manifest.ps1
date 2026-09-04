@@ -10,8 +10,42 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $runnerPath = Join-Path $repoRoot "runner\air780epm_runner"
-$csdkRoot = Join-Path $repoRoot "external\luatos-soc-2024"
-$luatosRoot = Join-Path $repoRoot "external\LuatOS"
+$repoParent = Split-Path $repoRoot -Parent
+
+function Resolve-DependencyRoot {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$EnvVarName,
+        [Parameter(Mandatory = $true)]
+        [string[]]$Candidates
+    )
+
+    $envValue = [System.Environment]::GetEnvironmentVariable($EnvVarName)
+    if (-not [string]::IsNullOrWhiteSpace($envValue) -and (Test-Path -LiteralPath $envValue)) {
+        return (Resolve-Path -LiteralPath $envValue).Path
+    }
+
+    foreach ($candidate in $Candidates) {
+        $fullCandidate = if ([System.IO.Path]::IsPathRooted($candidate)) {
+            $candidate
+        }
+        else {
+            Join-Path $repoParent $candidate
+        }
+        if (Test-Path -LiteralPath $fullCandidate) {
+            return (Resolve-Path -LiteralPath $fullCandidate).Path
+        }
+    }
+
+    throw "Could not resolve $EnvVarName. Checked: $($Candidates -join ', ')"
+}
+
+$csdkRoot = Resolve-DependencyRoot -EnvVarName "LUATOS_SOC_ROOT" -Candidates @(
+    "deps\luatos-soc-2024"
+)
+$luatosRoot = Resolve-DependencyRoot -EnvVarName "LUATOS_ROOT" -Candidates @(
+    "deps\LuatOS"
+)
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     $OutputPath = Join-Path $runnerPath "build\arduino_export_manifest.json"

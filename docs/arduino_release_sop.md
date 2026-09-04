@@ -124,7 +124,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_ins
 - 验证 platform shape。
 - 验证 CSDK tool 不含重复 toolchain。
 - 编译安装后的 Blink。
-- 编译第三方库 probe。
+- 通过 Arduino library index 安装 `PubSubClient` 并编译安装后的 `MqttsLoopback`。
+- 编译实验性第三方库 probe。
 
 有硬件时再跑：
 
@@ -142,17 +143,17 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
   -Clean `
-  -OutputDirectory .\dist\release-v0.1.1 `
-  -BaseUrl https://github.com/<owner>/<release-repo>/releases/download/v0.1.1 `
-  -PlatformVersion 0.1.1 `
-  -CsdkVersion 0.1.1
+  -OutputDirectory .\dist\release-v0.2.0 `
+  -BaseUrl https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0 `
+  -PlatformVersion 0.2.0 `
+  -CsdkVersion 0.2.0
 ```
 
 发布目录只应该包含要上传的文件，例如：
 
 ```text
-air780-arduino-platform-0.1.1.zip
-csdk-prebuilt-air780epm-0.1.1-notoolchain-toolroot.zip
+air780-arduino-platform-0.2.0.zip
+csdk-prebuilt-air780epm-0.2.0-notoolchain-toolroot.zip
 gnu-rm-10.2.1-ec718.zip
 luatos-cli-1.8.0.zip
 package_air780_index.json
@@ -170,12 +171,12 @@ release-candidate.manifest.json
 推荐用公开 release 仓库承载 Arduino 包，例如：
 
 ```text
-https://github.com/<owner>/air780-arduino-package
+https://github.com/aix402/air780exx-arduino-core
 ```
 
 流程：
 
-1. 创建 tag，例如 `v0.1.1`。
+1. 创建 tag，例如 `v0.2.0`。
 2. 创建 GitHub Release。
 3. 上传所有 release assets。
 4. 确认 release 不是 draft，或者明确需要 draft 测试。
@@ -185,7 +186,7 @@ https://github.com/<owner>/air780-arduino-package
 Boards Manager URL 示例：
 
 ```text
-https://github.com/aix402/air780-arduino-package/releases/download/v0.1.1/package_air780_index.json
+https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/package_air780_index.json
 ```
 
 ## Arduino IDE 验证
@@ -277,7 +278,7 @@ luatos-cli flash run --soc <firmware.soc> --port <selected-port>
 记录位置建议：
 
 - `docs\release_install_guide.md`
-- `docs\prebuilt_release_merge_plan.md`
+- `docs\public_release_checklist.md`
 - GitHub Release notes
 
 ## 主线合入

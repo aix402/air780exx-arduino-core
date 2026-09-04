@@ -16,6 +16,7 @@ hardware/
 libraries/ArduinoJson/
 .tmp_*
 .tmp*/
+.codex-tmp/
 .xmake/
 runner/air780epm_runner/generated/
 tools/rust/
@@ -29,3 +30,11 @@ tools/arduino-cli-release/
 *.soc
 *.size
 *.tmp
+
+# Maintainer-only working notes retained locally, not part of the public repo.
+docs/arduino_core_plan_ec718pm.md
+docs/arduino_core_porting_runbook.md
+docs/csdk_prebuilt_a_research.md
+docs/prebuilt_release_merge_plan.md
+docs/sleep_logic_summary.md
+docs/sleep_migration_checklist_ec718_ml307nec.md

@@ -15,8 +15,8 @@ Maintainer mode needs the full CSDK/LuatOS source trees and xmake. Arduino user 
 
 Inputs:
 
-- Full `external\luatos-soc-2024`.
-- Full `external\LuatOS`.
+- Full `deps\luatos-soc-2024`.
+- Full `deps\LuatOS`.
 - `runner\air780epm_runner`.
 - xmake.
 - GNU Arm Embedded toolchain.
@@ -44,21 +44,21 @@ prebuilt .a + headers + vendor libs + tools + firmware + toolchain
 dist\csdk-prebuilt-air780epm
 ```
 
-The current distribution keeps the source-like path structure:
+The maintainer workspace keeps the source trees under `deps/`:
 
 ```text
-dist\csdk-prebuilt-air780epm\
-  external\luatos-soc-2024\
-  external\LuatOS\
-  runner\air780epm_runner\
-  core\air780epm\
-  abi\linker\air780epm_flash.ld
-  abi\package\mem_map.txt
-  toolchain\gnu-rm\
-  arduino_export_manifest.json
+WORKSPACE_ROOT\
+├─ air780exx-arduino-core\
+└─ deps\
+   ├─ LuatOS\
+   └─ luatos-soc-2024\
 ```
 
-The `external` directories inside `dist` are not full source trees. They are a packaged subset: required headers, vendor static libraries, package tools, firmware inputs, and metadata. The user-side distribution consumes the generated linker script and memory-map text under `abi` instead of regenerating them from the SDK linker template.
+The generated distribution package contains only package-internal subsets:
+required headers, vendor static libraries, package tools, firmware inputs, and
+metadata. It does not publish the full CSDK or LuatOS source trees. The
+user-side distribution consumes the generated linker script and memory-map
+text under `abi` instead of regenerating them from the SDK linker template.
 SDK memory-map headers such as `mem_map.h` and `mem_map_csdk_*.h` are excluded from the distribution header copy; the fixed package memory map is `abi\package\mem_map.txt`.
 The SDK NVM header `osanvm.h` is also excluded; Arduino `EEPROM` and `Preferences` call the runner-side `arduino_nvm_io` ABI instead.
 CSDK network-private headers used by TCP/UDP/TLS/modem internals are excluded as well; Arduino-facing network classes compile against `arduino_tcp_io`, `arduino_udp_io`, `arduino_tls_io`, and `arduino_modem_io`.
@@ -385,9 +385,9 @@ Package the verified distribution for release:
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
   -Clean `
-  -PlatformVersion 0.1.1 `
-  -CsdkVersion 0.1.1 `
-  -BaseUrl https://github.com/aix402/air780-arduino-package/releases/download/v0.1.1
+  -PlatformVersion 0.2.0 `
+  -CsdkVersion 0.2.0 `
+  -BaseUrl https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0
 ```
 
 The release preparation script exports a no-toolchain CSDK distribution, then

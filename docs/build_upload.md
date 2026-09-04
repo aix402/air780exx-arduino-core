@@ -14,7 +14,7 @@ AIR780EPM Arduino Core bring-up.
 | FQBN | `air780:air780:air780epm_dev` |
 | Core build backend | LuatOS CSDK `xmake` runner |
 | Flash tool | `luatos-cli` release build |
-| Manual fallback | `F:\hezhou\luatools\Luatools_v3.exe` |
+| Manual fallback | Optional local Luatools installation supplied with `-LuatoolsPath` |
 
 ## Source Layout
 
@@ -22,9 +22,13 @@ AIR780EPM Arduino Core bring-up.
 | --- | --- |
 | `core\air780epm` | Arduino platform, core, variant, board package files |
 | `runner\air780epm_runner` | xmake-native runner app that hosts `setup()` / `loop()` |
-| `external\LuatOS` | LuatOS public headers and module reference tree |
-| `external\luatos-soc-2024` | AIR780Ex CSDK and xmake build backend |
+| `..\deps\LuatOS` | LuatOS public headers and module reference tree |
+| `..\deps\luatos-soc-2024` | AIR780Ex CSDK and xmake build backend; maintainer-only dependency |
 | `tools\luatos-cli-release` | Preferred command-line flash/log tool |
+
+`deps\luatos-soc-2024` does not need to live inside the public Arduino
+repo. For the open-source layout, keep the main tree self-contained and place
+maintainer dependencies in a sibling `deps` directory when needed.
 
 ## Build Artifacts
 
@@ -51,7 +55,7 @@ runner/air780epm_runner/generated
 ## Flash Layout Override
 
 The runner intentionally keeps `runner\air780epm_runner\mem_map_7xx.h`.
-`external\luatos-soc-2024\csdk.lua` auto-detects this file and builds with
+`..\deps\luatos-soc-2024\csdk.lua` auto-detects this file and builds with
 `__USER_MAP_CONF_FILE__="mem_map_7xx.h"`.
 
 Current AIR780EPM Arduino runner layout:

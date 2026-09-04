@@ -2,9 +2,9 @@ param(
     [string]$OutputDirectory = ".\dist\release-candidate",
     [string]$ReleasesDirectory = ".\dist\releases",
     [string]$CsdkDistributionDirectory = ".\dist\csdk-prebuilt-air780epm-notoolchain",
-    [string]$BaseUrl = "https://example.com/air780/arduino/releases",
-    [string]$PlatformVersion = "0.1.0",
-    [string]$CsdkVersion = "0.1.0",
+    [string]$BaseUrl = "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0",
+    [string]$PlatformVersion = "0.2.0",
+    [string]$CsdkVersion = "0.2.0",
     [string]$GnuRmVersion = "10.2.1-ec718",
     [string]$LuatOSCliVersion = "1.8.0",
     [switch]$Clean
@@ -41,8 +41,33 @@ if ($Clean -and (Test-Path -LiteralPath $outputRoot)) {
 }
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 
+Write-Host "==> Link default runner and validate static constructor map"
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "build_core.ps1")
+if ($LASTEXITCODE -ne 0) {
+    throw "Default runner link failed with exit code $LASTEXITCODE"
+}
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "check_static_ctors_map.ps1")
+if ($LASTEXITCODE -ne 0) {
+    throw "Static constructor map validation failed with exit code $LASTEXITCODE"
+}
+
+Write-Host "==> Build clean CSDK/runner prebuild and export manifest"
+$prebuildArgs = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", (Join-Path $PSScriptRoot "prebuild_csdk.ps1")
+)
+if ($Clean) {
+    $prebuildArgs += "-Clean"
+}
+& pwsh @prebuildArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "CSDK/runner prebuild and manifest export failed with exit code $LASTEXITCODE"
+}
+
 Write-Host "==> Export no-toolchain CSDK prebuilt distribution"
 & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1") `
+    -ManifestPath ".\runner\air780epm_runner\build\arduino_export_manifest.json" `
     -OutputDirectory $CsdkDistributionDirectory `
     -NoToolchain `
     -Clean

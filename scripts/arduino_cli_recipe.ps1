@@ -346,6 +346,7 @@ function Test-CompilerBuiltinHeader {
         "stdlib.h",
         "string.h",
         "strings.h",
+        "time.h",
         "type_traits",
         "utility"
     )

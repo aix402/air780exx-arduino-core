@@ -1,8 +1,26 @@
 project_dir = os.scriptdir()
 project_name = project_dir:match(".+[/\\]([%w_]+)")
 
-csdk_root = "../../external/luatos-soc-2024/"
-includes(csdk_root .. "csdk.lua")
+local function resolve_dependency_root(env_name, candidates)
+    local env_value = os.getenv(env_name)
+    if env_value and #env_value > 0 and os.isdir(env_value) then
+        return path.normalize(env_value)
+    end
+
+    for _, candidate in ipairs(candidates) do
+        local full_candidate = path.absolute(candidate, project_dir)
+        if os.isdir(full_candidate) then
+            return path.normalize(full_candidate)
+        end
+    end
+
+    raise("Could not resolve " .. env_name .. " from configured dependency paths")
+end
+
+csdk_root = resolve_dependency_root("LUATOS_SOC_ROOT", {
+    "../../../deps/luatos-soc-2024/"
+})
+includes(path.join(csdk_root, "csdk.lua"))
 description_common()
 
 option("arduino_static_ctors", function()

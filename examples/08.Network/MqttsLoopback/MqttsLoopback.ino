@@ -1,12 +1,13 @@
 #include <Arduino.h>
+#include <PubSubClient.h>
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 namespace {
 
-const char *kBrokerHost = "airtest.openluat.com";
-const uint16_t kBrokerPort = 8888U;
-const char *kBrokerUsername = "mqtt_hz_test_2";
-const char *kBrokerPassword = "3bEKUb";
+const char *kBrokerHost = "broker.emqx.io";
+const uint16_t kBrokerPort = 8883U;
 const long kGmtOffsetSeconds = 8L * 3600L;
 const int kDaylightOffsetSeconds = 0;
 const char *kTimeServer1 = "ntp.aliyun.com";
@@ -15,44 +16,41 @@ const char *kTimeServer3 = "time1.cloud.tencent.com";
 
 const char kBrokerCa[] PROGMEM = R"PEM(
 -----BEGIN CERTIFICATE-----
-MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
-TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
-cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
-WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
-ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
-MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
-h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
-0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
-A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
-T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
-B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
-B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
-KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
-OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
-jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
-qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
-rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
-HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
-hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
-ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
-3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
-NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
-ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
-TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
-jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
-oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
-4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
-mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
-emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
 )PEM";
 
-bool gReceivedPublish = false;
-char gClientId[64] = {0};
-char gTopic[96] = {0};
+CellularClientSecure secureClient;
+PubSubClient mqttClient(secureClient);
+
+char gClientId[72] = {0};
+char gTopic[128] = {0};
 char gPayload[64] = {0};
 char gTerminalState[48] = "BOOT";
-uint8_t gPublishFrame[256] = {0};
+bool gReceived = false;
+
+void printLine(const char *line) {
+  Serial.println(line);
+}
 
 void setTerminalState(const char *state) {
   if (state == NULL) {
@@ -64,11 +62,24 @@ void setTerminalState(const char *state) {
   gTerminalState[sizeof(gTerminalState) - 1U] = '\0';
 }
 
+void fail(const char *stage) {
+  char line[128] = {0};
+
+  setTerminalState(stage);
+  snprintf(line,
+           sizeof(line),
+           "+ARDUINO: MQTTS,FAIL,%s,STATE,%d,TLSERR,%ld",
+           (stage != NULL) ? stage : "",
+           mqttClient.state(),
+           (long)secureClient.lastError());
+  Serial.println(line);
+}
+
 void printStatus(const char *stage) {
   AIR780EPMModemStatus status;
   const bool ok = Modem.getStatus(status);
   const String ipText = status.localIPv4.toString();
-  char line[160] = {0};
+  char line[176] = {0};
 
   snprintf(line,
            sizeof(line),
@@ -82,16 +93,21 @@ void printStatus(const char *stage) {
   Serial.println(line);
 }
 
-void fail(const char *stage, int32_t error) {
-  char line[96] = {0};
+bool waitNetworkReady(unsigned long timeoutMs) {
+  const unsigned long start = millis();
 
-  setTerminalState(stage);
-  snprintf(line,
-           sizeof(line),
-           "+ARDUINO: MQTTS,FAIL,%s,ERR,%ld",
-           (stage != NULL) ? stage : "",
-           (long)error);
-  Serial.println(line);
+  while ((millis() - start) < timeoutMs) {
+    AIR780EPMModemStatus status;
+    if (Modem.getStatus(status) && status.networkReady && status.hasIPv4) {
+      printStatus("NET_READY");
+      return true;
+    }
+
+    delay(1000);
+  }
+
+  printStatus("NET_TIMEOUT");
+  return false;
 }
 
 bool syncTime() {
@@ -103,281 +119,11 @@ bool syncTime() {
   }
 
   char buffer[32] = {0};
+  char line[96] = {0};
   strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
-  {
-    char line[80] = {0};
-    snprintf(line, sizeof(line), "+ARDUINO: MQTTS,LOCAL_TIME,%s", buffer);
-    Serial.println(line);
-  }
+  snprintf(line, sizeof(line), "+ARDUINO: MQTTS,LOCAL_TIME,%s", buffer);
+  Serial.println(line);
   return true;
-}
-
-size_t encodeRemainingLength(uint32_t value, uint8_t *out) {
-  size_t count = 0U;
-
-  do {
-    uint8_t encoded = (uint8_t)(value % 128U);
-    value /= 128U;
-    if (value > 0U) {
-      encoded |= 0x80U;
-    }
-    out[count++] = encoded;
-  } while ((value > 0U) && (count < 4U));
-
-  return count;
-}
-
-uint16_t appendMqttString(uint8_t *buffer, uint16_t offset, const char *value) {
-  const uint16_t length = (uint16_t)strlen(value);
-  buffer[offset++] = (uint8_t)(length >> 8);
-  buffer[offset++] = (uint8_t)(length & 0xFF);
-  memcpy(buffer + offset, value, length);
-  return (uint16_t)(offset + length);
-}
-
-bool writeAll(CellularClientSecure &client, const uint8_t *buffer, size_t length) {
-  return client.write(buffer, length) == length;
-}
-
-bool readFrame(CellularClientSecure &client,
-               uint8_t *type,
-               uint8_t *payload,
-               size_t payloadCapacity,
-               size_t *payloadLength,
-               uint32_t timeoutMs) {
-  const unsigned long start = millis();
-  uint32_t remainingLength = 0U;
-  uint32_t multiplier = 1U;
-  size_t received = 0U;
-
-  while ((millis() - start) < timeoutMs) {
-    if (client.available() > 0) {
-      const int value = client.read();
-      if (value >= 0) {
-        *type = (uint8_t)(value & 0xF0);
-        break;
-      }
-    }
-    if (!client.connected()) {
-      return false;
-    }
-    delay(10);
-  }
-
-  if (!client.connected()) {
-    return false;
-  }
-
-  while ((millis() - start) < timeoutMs) {
-    if (client.available() > 0) {
-      const int value = client.read();
-      if (value < 0) {
-        continue;
-      }
-
-      remainingLength += (uint32_t)(value & 127) * multiplier;
-      if ((value & 128) == 0) {
-        break;
-      }
-      multiplier *= 128U;
-    } else {
-      delay(10);
-    }
-  }
-
-  if (remainingLength > payloadCapacity) {
-    return false;
-  }
-
-  while ((millis() - start) < timeoutMs && received < remainingLength) {
-    while (client.available() > 0 && received < remainingLength) {
-      const int value = client.read();
-      if (value < 0) {
-        break;
-      }
-      payload[received++] = (uint8_t)value;
-    }
-
-    if (received >= remainingLength) {
-      break;
-    }
-
-    if (!client.connected()) {
-      return false;
-    }
-    delay(10);
-  }
-
-  if (payloadLength != NULL) {
-    *payloadLength = received;
-  }
-  return received == remainingLength;
-}
-
-bool sendConnect(CellularClientSecure &client) {
-  uint8_t packet[192];
-  uint8_t remLen[4];
-  const uint16_t clientIdLength = (uint16_t)strlen(gClientId);
-  const uint16_t usernameLength = (uint16_t)strlen(kBrokerUsername);
-  const uint16_t passwordLength = (uint16_t)strlen(kBrokerPassword);
-  const uint32_t remainingLength = 10U + 2U + clientIdLength + 2U + usernameLength + 2U + passwordLength;
-  const size_t remLenBytes = encodeRemainingLength(remainingLength, remLen);
-  uint16_t offset = 0U;
-
-  packet[offset++] = 0x10;
-  memcpy(packet + offset, remLen, remLenBytes);
-  offset += (uint16_t)remLenBytes;
-
-  packet[offset++] = 0x00;
-  packet[offset++] = 0x04;
-  packet[offset++] = 'M';
-  packet[offset++] = 'Q';
-  packet[offset++] = 'T';
-  packet[offset++] = 'T';
-  packet[offset++] = 0x04;
-  packet[offset++] = 0xC2;
-  packet[offset++] = 0x00;
-  packet[offset++] = 60;
-  offset = appendMqttString(packet, offset, gClientId);
-  offset = appendMqttString(packet, offset, kBrokerUsername);
-  offset = appendMqttString(packet, offset, kBrokerPassword);
-
-  return writeAll(client, packet, offset);
-}
-
-bool sendSubscribe(CellularClientSecure &client) {
-  uint8_t packet[160];
-  uint8_t remLen[4];
-  const uint16_t topicLength = (uint16_t)strlen(gTopic);
-  const uint32_t remainingLength = 2U + 2U + topicLength + 1U;
-  const size_t remLenBytes = encodeRemainingLength(remainingLength, remLen);
-  uint16_t offset = 0U;
-
-  packet[offset++] = 0x82;
-  memcpy(packet + offset, remLen, remLenBytes);
-  offset += (uint16_t)remLenBytes;
-  packet[offset++] = 0x00;
-  packet[offset++] = 0x01;
-  offset = appendMqttString(packet, offset, gTopic);
-  packet[offset++] = 0x00;
-
-  return writeAll(client, packet, offset);
-}
-
-bool sendPublish(CellularClientSecure &client) {
-  uint8_t packet[224];
-  uint8_t remLen[4];
-  const uint16_t topicLength = (uint16_t)strlen(gTopic);
-  const uint16_t payloadLength = (uint16_t)strlen(gPayload);
-  const uint32_t remainingLength = 2U + topicLength + payloadLength;
-  const size_t remLenBytes = encodeRemainingLength(remainingLength, remLen);
-  uint16_t offset = 0U;
-
-  packet[offset++] = 0x30;
-  memcpy(packet + offset, remLen, remLenBytes);
-  offset += (uint16_t)remLenBytes;
-  offset = appendMqttString(packet, offset, gTopic);
-  memcpy(packet + offset, gPayload, payloadLength);
-  offset = (uint16_t)(offset + payloadLength);
-
-  return writeAll(client, packet, offset);
-}
-
-bool waitForConnAck(CellularClientSecure &client) {
-  uint8_t type = 0U;
-  uint8_t payload[8];
-  size_t payloadLength = 0U;
-
-  if (!readFrame(client, &type, payload, sizeof(payload), &payloadLength, 15000UL)) {
-    return false;
-  }
-
-  {
-    char line[64] = {0};
-    snprintf(line, sizeof(line), "+ARDUINO: MQTTS,FRAME,%02X,LEN,%lu",
-             (unsigned int)type,
-             (unsigned long)payloadLength);
-    Serial.println(line);
-  }
-
-  return (type == 0x20U) && (payloadLength >= 2U) && (payload[1] == 0x00U);
-}
-
-bool waitForSubAck(CellularClientSecure &client) {
-  uint8_t type = 0U;
-  uint8_t payload[8];
-  size_t payloadLength = 0U;
-
-  if (!readFrame(client, &type, payload, sizeof(payload), &payloadLength, 15000UL)) {
-    return false;
-  }
-
-  {
-    char line[64] = {0};
-    snprintf(line, sizeof(line), "+ARDUINO: MQTTS,FRAME,%02X,LEN,%lu",
-             (unsigned int)type,
-             (unsigned long)payloadLength);
-    Serial.println(line);
-  }
-
-  return (type == 0x90U) && (payloadLength >= 3U) && (payload[2] != 0x80U);
-}
-
-bool waitForPublish(CellularClientSecure &client) {
-  const unsigned long start = millis();
-  uint8_t type = 0U;
-  uint8_t *payload = gPublishFrame;
-  size_t payloadLength = 0U;
-
-  while ((millis() - start) < 20000UL) {
-    if (!readFrame(client, &type, payload, sizeof(payload), &payloadLength, 5000UL)) {
-      if (!client.connected()) {
-        return false;
-      }
-      continue;
-    }
-
-    {
-      char line[64] = {0};
-      snprintf(line, sizeof(line), "+ARDUINO: MQTTS,FRAME,%02X,LEN,%lu",
-               (unsigned int)type,
-               (unsigned long)payloadLength);
-      Serial.println(line);
-    }
-
-    if (type != 0x30U || payloadLength < 2U) {
-      continue;
-    }
-
-    const uint16_t topicLength = ((uint16_t)payload[0] << 8) | payload[1];
-    if ((size_t)(2U + topicLength) > payloadLength) {
-      char line[80] = {0};
-      snprintf(line,
-               sizeof(line),
-               "+ARDUINO: MQTTS,PUBLISH_PARSE,INVALID_TOPIC_LEN,%u,TOTAL,%lu",
-               (unsigned int)topicLength,
-               (unsigned long)payloadLength);
-      Serial.println(line);
-      continue;
-    }
-
-    const size_t bodyLength = payloadLength - 2U - topicLength;
-    const size_t expectedTopicLength = strlen(gTopic);
-    const size_t expectedPayloadLength = strlen(gPayload);
-
-    if ((topicLength == expectedTopicLength) &&
-        (bodyLength == expectedPayloadLength) &&
-        (memcmp(payload + 2U, gTopic, expectedTopicLength) == 0) &&
-        (memcmp(payload + 2U + topicLength, gPayload, expectedPayloadLength) == 0)) {
-      gReceivedPublish = true;
-      Serial.println("+ARDUINO: MQTTS,LOOPBACK_MATCH,1");
-      return true;
-    }
-
-    Serial.println("+ARDUINO: MQTTS,LOOPBACK_MATCH,0");
-  }
-
-  return false;
 }
 
 void buildIdentity() {
@@ -385,50 +131,60 @@ void buildIdentity() {
   const unsigned long salt = millis();
 
   if (Modem.getIdentity(identity) && identity.imeiValid) {
-    snprintf(gClientId, sizeof(gClientId), "air780epm-%s-%lu", identity.imei, salt);
-    snprintf(gTopic, sizeof(gTopic), "/luatos/testcase/mqtt/%s/loopback", identity.imei);
+    snprintf(gClientId, sizeof(gClientId), "air780epm-mqtts-%s-%lu", identity.imei, salt);
+    snprintf(gTopic, sizeof(gTopic), "/luatos/testcase/mqtt/%s/mqtts_loopback", identity.imei);
   } else {
-    snprintf(gClientId, sizeof(gClientId), "air780epm-%lu", salt);
-    snprintf(gTopic, sizeof(gTopic), "/luatos/testcase/mqtt/fallback/loopback");
+    snprintf(gClientId, sizeof(gClientId), "air780epm-mqtts-%lu", salt);
+    snprintf(gTopic, sizeof(gTopic), "/luatos/testcase/mqtt/fallback/mqtts_loopback");
   }
 
-  snprintf(gPayload, sizeof(gPayload), "hello-%lu", salt);
+  snprintf(gPayload, sizeof(gPayload), "mqtts-loopback-%lu", salt);
 }
 
-}  // namespace
+void mqttCallback(char *topic, uint8_t *payload, unsigned int length) {
+  char message[80] = {0};
+  char line[192] = {0};
+  const unsigned int copyLength =
+      (length < (sizeof(message) - 1U)) ? length : (sizeof(message) - 1U);
+
+  memcpy(message, payload, copyLength);
+  message[copyLength] = '\0';
+
+  snprintf(line,
+           sizeof(line),
+           "+ARDUINO: MQTTS,RX,%s,%s",
+           (topic != NULL) ? topic : "",
+           message);
+  Serial.println(line);
+
+  if ((topic != NULL) && (strcmp(topic, gTopic) == 0) && (strcmp(message, gPayload) == 0)) {
+    gReceived = true;
+  }
+}
+
+} // namespace
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(921600);
   delay(1500);
 
-  setTerminalState("SETUP");
-  Serial.println("+ARDUINO: MQTTS,READY");
+  printLine("+ARDUINO: MQTTS,READY");
   Modem.begin();
-
   printStatus("EARLY");
-  if (!Modem.waitForNetwork(60000UL)) {
-    printStatus("REGISTER_TIMEOUT");
-    fail("REGISTER_TIMEOUT", 0);
+
+  if (!waitNetworkReady(60000UL)) {
+    fail("NET_READY");
     return;
   }
-
-  printStatus("REGISTERED");
-  if (!Modem.activatePDP(60000UL)) {
-    printStatus("PDP_TIMEOUT");
-    fail("PDP_TIMEOUT", 0);
-    return;
-  }
-
-  printStatus("NET_READY");
 
   if (!syncTime()) {
-    fail("TIME_SYNC", 0);
+    fail("TIME_SYNC");
     return;
   }
 
   buildIdentity();
   {
-    char line[160] = {0};
+    char line[192] = {0};
     snprintf(line, sizeof(line), "+ARDUINO: MQTTS,CLIENT_ID,%s", gClientId);
     Serial.println(line);
     snprintf(line, sizeof(line), "+ARDUINO: MQTTS,TOPIC,%s", gTopic);
@@ -437,10 +193,15 @@ void setup() {
     Serial.println(line);
   }
 
-  CellularClientSecure client;
-  client.setCACert(kBrokerCa);
-  client.setConnectTimeout(30000UL);
-  client.setReadTimeout(8000UL);
+  secureClient.setCACert(kBrokerCa);
+  secureClient.setConnectTimeout(30000UL);
+  secureClient.setReadTimeout(10000UL);
+
+  mqttClient.setServer(kBrokerHost, kBrokerPort);
+  mqttClient.setCallback(mqttCallback);
+  mqttClient.setKeepAlive(60);
+  mqttClient.setSocketTimeout(12);
+  mqttClient.setBufferSize(384);
 
   {
     char line[96] = {0};
@@ -448,70 +209,55 @@ void setup() {
     Serial.println(line);
   }
 
-  if (!client.connect(kBrokerHost, kBrokerPort)) {
-    fail("TLS_CONNECT", client.lastError());
+  if (!mqttClient.connect(gClientId)) {
+    fail("CONNECT");
     return;
   }
 
-  Serial.println("+ARDUINO: MQTTS,TLS_CONNECT,1");
+  printLine("+ARDUINO: MQTTS,CONNECT,1");
 
-  if (!sendConnect(client)) {
-    fail("MQTT_CONNECT_WRITE", client.lastError());
-    client.stop();
+  if (!mqttClient.subscribe(gTopic)) {
+    fail("SUBSCRIBE");
+    mqttClient.disconnect();
     return;
   }
 
-  if (!waitForConnAck(client)) {
-    fail("MQTT_CONNACK", client.lastError());
-    client.stop();
+  printLine("+ARDUINO: MQTTS,SUBSCRIBE,1");
+  delay(500);
+
+  if (!mqttClient.publish(gTopic, gPayload)) {
+    fail("PUBLISH");
+    mqttClient.disconnect();
     return;
   }
 
-  Serial.println("+ARDUINO: MQTTS,CONNACK,1");
+  printLine("+ARDUINO: MQTTS,PUBLISH,1");
+  setTerminalState("WAIT_RX");
 
-  if (!sendSubscribe(client)) {
-    fail("SUBSCRIBE_WRITE", client.lastError());
-    client.stop();
-    return;
+  const unsigned long start = millis();
+  unsigned long lastHeartbeat = 0UL;
+  while (((millis() - start) < 45000UL) && !gReceived) {
+    mqttClient.loop();
+    const unsigned long now = millis();
+    if ((now - lastHeartbeat) >= 5000UL) {
+      char line[96] = {0};
+      snprintf(line, sizeof(line), "+ARDUINO: MQTTS,HEARTBEAT,%s", gTerminalState);
+      Serial.println(line);
+      lastHeartbeat = now;
+    }
+    delay(10);
   }
 
-  if (!waitForSubAck(client)) {
-    fail("SUBACK", client.lastError());
-    client.stop();
-    return;
+  if (gReceived) {
+    setTerminalState("PASS");
+    printLine("+ARDUINO: MQTTS,PASS");
+  } else {
+    fail("RX_TIMEOUT");
   }
 
-  Serial.println("+ARDUINO: MQTTS,SUBACK,1");
-
-  if (!sendPublish(client)) {
-    fail("PUBLISH_WRITE", client.lastError());
-    client.stop();
-    return;
-  }
-
-  Serial.println("+ARDUINO: MQTTS,PUBLISH,1");
-
-  if (!waitForPublish(client)) {
-    fail("PUBLISH_RX", client.lastError());
-    client.stop();
-    return;
-  }
-
-  client.stop();
-  setTerminalState("PASS");
-  Serial.println("+ARDUINO: MQTTS,PASS");
+  mqttClient.disconnect();
 }
 
 void loop() {
-  static unsigned long lastHeartbeatMs = 0U;
-  const unsigned long now = millis();
-
-  if ((now - lastHeartbeatMs) >= 3000UL) {
-    char line[96] = {0};
-    snprintf(line, sizeof(line), "+ARDUINO: MQTTS,HEARTBEAT,%s", gTerminalState);
-    Serial.println(line);
-    lastHeartbeatMs = now;
-  }
-
-  delay(100);
+  delay(1000);
 }

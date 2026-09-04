@@ -2,7 +2,7 @@
 
 Runtime validation sketch for `PubSubClient` over `CellularClientSecure` with CA verification enabled.
 
-It connects to the LuatOS public MQTT TLS test broker at `airtest.openluat.com:8888`, loads the ISRG Root X1 CA with `setCACert()`, subscribes to a unique device topic, publishes a payload to that same topic, and passes only after receiving the message through the PubSubClient callback.
+It connects to the EMQX public MQTT TLS broker at `broker.emqx.io:8883`, loads the DigiCert Global Root CA with `setCACert()`, subscribes to a unique device topic, publishes a payload to that same topic, and passes only after receiving the message through the PubSubClient callback.
 
 This sketch validates the Arduino `Client`/TLS stream contract used by common third-party MQTT libraries. It does not add an MQTT business API to the core.
 

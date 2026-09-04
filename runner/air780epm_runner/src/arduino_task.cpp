@@ -11,6 +11,8 @@ extern "C" bool air780epm_static_constructors_ok(void);
 
 static luat_rtos_task_handle arduino_task_handle;
 
+constexpr uint32_t kArduinoTaskStackSize = 16 * 1024;
+
 static void arduino_task(void *param) {
     (void)param;
 
@@ -28,7 +30,7 @@ static void arduino_task(void *param) {
 static void arduino_task_init(void) {
     int rc = luat_rtos_task_create(
         &arduino_task_handle,
-        8 * 1024,
+        kArduinoTaskStackSize,
         50,
         "arduino",
         arduino_task,

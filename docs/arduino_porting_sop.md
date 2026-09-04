@@ -30,7 +30,7 @@
 | `docs\arduino_bridge_convergence_sop.md` | 桥接层收敛、SDK 头文件隔离、ABI 边界设计 |
 | `docs\arduino_release_sop.md` | Boards Manager 包制作、发布、安装、升级和硬件验证 |
 
-旧的 `docs\arduino_core_porting_runbook.md` 保留为本仓库 ML307N-EC / AIR780EPM 移植历史和阶段经验。新项目启动时优先读本 SOP，再按旧 runbook 查细节案例。
+本公开仓库仅保留当前可执行的移植与发布流程。历史研究记录由维护者在本地保存，不作为公开仓库的依赖。
 
 ## 核心原则
 

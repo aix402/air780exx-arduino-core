@@ -184,7 +184,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_ins
 - `osanvm.h` 不再暴露给 Arduino `EEPROM` / `Preferences`，core 改调 `arduino_nvm_io`。
 - network 私有头文件从 Arduino-facing classes 中移除，core 改调 `arduino_tcp_io`、`arduino_udp_io`、`arduino_tls_io`、`arduino_modem_io`。
 - CSDK/runner 预编译为 `libcsdk.a` 和 `libair780epm_runner.a`，Arduino CLI 只编译 sketch、core 和 libraries。
-- 发布包中的 `external\LuatOS` / `external\luatos-soc-2024` 只保留 ABI 必要子集，不代表完整源码发布。
+- 发布包中的 LuatOS/CSDK 目录只保留 ABI 必要子集，不代表完整源码发布。
 
 ## 其他模组移植建议
 

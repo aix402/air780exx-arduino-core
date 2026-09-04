@@ -33,7 +33,7 @@ uses a temporary `127.0.0.1` URL and is not a publishable URL.
 Current public package index:
 
 ```text
-https://github.com/aix402/air780-arduino-package/releases/download/v0.1.1/package_air780_index.json
+https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/package_air780_index.json
 ```
 
 ## Proxy Notes
@@ -113,9 +113,10 @@ Arm toolchain archive, and `luatos-cli` archive, generates the draft package
 index, installs the package into an isolated Arduino15-like data directory,
 verifies the installed platform shape, verifies the CSDK tool does not contain a
 bundled `toolchain` directory, compiles installed-package `Blink` with Arduino
-CLI's default build path, then compiles `ComplexLibraryProbe` with a temporary
-sketchbook library to keep third-party library coverage out of the published
-example menu.
+CLI's default build path, installs `PubSubClient` through the Arduino library
+index, compiles the installed-package `MqttsLoopback` example, then compiles
+`ComplexLibraryProbe` with a temporary sketchbook library to keep experimental
+third-party library coverage out of the published example menu.
 
 Also verify the generated package index references the intended archive files
 and that each archive size and SHA256 checksum matches the file in
