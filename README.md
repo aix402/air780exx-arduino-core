@@ -2,9 +2,8 @@
 
 Arduino Core porting workspace for OpenLuat AIR780Ex modules.
 
-The first supported target is `AIR780EPM`, based on the EC718PM chip. This
-workspace uses the LuatOS CSDK xmake flow instead of the older SDK-internal
-Makefile flow used by the ML307N-EC prototype.
+The first supported target is [AIR780EPM](https://docs.openluat.com/air780epm/product/),
+based on the EC718PM chip and the LuatOS CSDK xmake flow.
 
 ## Repository Name
 
@@ -60,6 +59,9 @@ license locations.
 
 ## Project Docs
 
+- [AIR780EPM product page](https://docs.openluat.com/air780epm/product/)
+- [Arduino IDE install and upload guide](docs/release_install_guide.md)
+- [Boot/download mode recovery upload](docs/release_install_guide.md#boot-mode-recovery-upload)
 - [Maintainer notes](docs/maintainer_notes.md)
 - [Public release checklist](docs/public_release_checklist.md)
 - [Contributing](CONTRIBUTING.md)
@@ -174,6 +176,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\upload_core.ps1 -ComPort COM3
 powershell -ExecutionPolicy Bypass -File .\scripts\view_log.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_log.ps1 -RequirePass
 ```
+
+For a board that no longer exposes its normal serial port, enter Boot/download
+mode by holding `BOOT`, pressing `RESET` (or power-cycling), then releasing
+`BOOT` and waiting for the EC718 download port to appear. See the
+[recovery upload guide](docs/release_install_guide.md#boot-mode-recovery-upload)
+for the Arduino IDE and command-line flow.
 
 Check the generated map file before hardware validation:
 

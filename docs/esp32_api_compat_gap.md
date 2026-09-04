@@ -29,7 +29,7 @@ not a claim that AIR780EPM behaves like an ESP32 at every API edge.
 | `analogRead()` / `analogReadMilliVolts()` | Compile-enabled on logical `A0..A3` | No GPIO-number analog mapping, no public range/attenuation API yet |
 | `analogWriteFrequency()` | Board-specific helper | Not an ESP32 `ledc*` API clone |
 | AIR780EPM URL OTA facade | Hardware-observed, failure-first only | A board-specific `AIR780EPMOTA` state machine now exists, but it is not ESP32 `Update.h`. On 2026-04-29 the no-URL baseline plus failure-path runtime were verified on AIR780EPM; real `.sota` stage/apply is still pending |
-| AIR780EPM sleep facade | Compile-enabled only | `AIR780EPMSleep` now exists, but it is a board-specific primitive modeled after the ML307NEC Arduino surface, not ESP32 `esp_sleep_*`. Wake pads are PMU IDs, and `deepSleep()` means EC718PM `SLP2` |
+| AIR780EPM sleep facade | Compile-enabled only | `AIR780EPMSleep` is a board-specific primitive, not ESP32 `esp_sleep_*`. Wake pads are PMU IDs, and `deepSleep()` means EC718PM `SLP2` |
 
 ## Not Yet Implemented
 
