@@ -12,6 +12,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$scriptHostPath = (Get-Process -Id $PID).Path
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -42,11 +43,11 @@ if ($Clean -and (Test-Path -LiteralPath $outputRoot)) {
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 
 Write-Host "==> Link default runner and validate static constructor map"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "build_core.ps1")
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "build_core.ps1")
 if ($LASTEXITCODE -ne 0) {
     throw "Default runner link failed with exit code $LASTEXITCODE"
 }
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "check_static_ctors_map.ps1")
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "check_static_ctors_map.ps1")
 if ($LASTEXITCODE -ne 0) {
     throw "Static constructor map validation failed with exit code $LASTEXITCODE"
 }
@@ -60,13 +61,13 @@ $prebuildArgs = @(
 if ($Clean) {
     $prebuildArgs += "-Clean"
 }
-& pwsh @prebuildArgs
+& $scriptHostPath @prebuildArgs
 if ($LASTEXITCODE -ne 0) {
     throw "CSDK/runner prebuild and manifest export failed with exit code $LASTEXITCODE"
 }
 
 Write-Host "==> Export no-toolchain CSDK prebuilt distribution"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1") `
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "export_csdk_prebuilt_distribution.ps1") `
     -ManifestPath ".\runner\air780epm_runner\build\arduino_export_manifest.json" `
     -OutputDirectory $CsdkDistributionDirectory `
     -NoToolchain `
@@ -76,7 +77,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> Package no-toolchain CSDK tool archive"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_csdk_prebuilt_distribution.ps1") `
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_csdk_prebuilt_distribution.ps1") `
     -DistributionDirectory $CsdkDistributionDirectory `
     -OutputDirectory $releasesRoot `
     -Version "$CsdkVersion-notoolchain-toolroot" `
@@ -88,7 +89,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> Package Arduino platform archive"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_arduino_platform.ps1") `
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_arduino_platform.ps1") `
     -OutputDirectory $releasesRoot `
     -Version $PlatformVersion `
     -Clean
@@ -97,7 +98,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> Package luatos-cli tool archive"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") `
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "package_luatos_cli_tool.ps1") `
     -OutputDirectory $releasesRoot `
     -Version $LuatOSCliVersion `
     -Clean
@@ -118,7 +119,7 @@ Assert-File -Path $luatosCliArchive -Description "luatos-cli archive"
 $candidateIndex = Join-Path $outputRoot "package_air780_index.json"
 
 Write-Host "==> Generate release candidate package index"
-& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") `
+& $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "generate_package_index_draft.ps1") `
     -OutputPath $candidateIndex `
     -BaseUrl $BaseUrl `
     -PlatformArchive $platformArchive `

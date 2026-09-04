@@ -8,6 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+. (Join-Path $PSScriptRoot "archive_helpers.ps1")
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -89,7 +90,7 @@ New-Item -ItemType Directory -Force -Path $stagingToolRoot | Out-Null
 
 try {
     Copy-Item -LiteralPath $sourceFullPath -Destination (Join-Path $stagingToolRoot "luatos-cli.exe") -Force
-    Compress-Archive -LiteralPath $stagingToolRoot -DestinationPath $zipPath -CompressionLevel Optimal
+    New-ProjectZipArchive -SourceDirectory $stagingToolRoot -DestinationPath $zipPath
 }
 finally {
     if (Test-Path -LiteralPath $stagingRoot) {

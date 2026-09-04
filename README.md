@@ -44,6 +44,9 @@ SDK:
 - release binaries should be published through GitHub Releases, not committed
   into git
 
+Maintainer scripts support Windows PowerShell 5.1 and PowerShell 7. The
+examples below use the Windows-included `powershell` command.
+
 See [docs/maintainer_notes.md](docs/maintainer_notes.md) for the suggested
 local layout and dependency policy.
 
@@ -182,7 +185,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\check_static_ctors_map.ps1
 Set up the local platform mount:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_setup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_setup.ps1
 ```
 
 This creates the local FQBN:
@@ -217,19 +220,19 @@ Detailed build flow:
 Phase-1 software acceptance:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1
 ```
 
 Distribution package acceptance:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1 -IncludeDistribution
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_phase1_csdk_prebuilt_experiment.ps1 -IncludeDistribution
 ```
 
 Create a release archive from the verified distribution package:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_csdk_prebuilt_distribution.ps1 -Clean
 ```
 
 This writes the `.zip`, `.zip.sha256`, and `.manifest.json` files under
@@ -238,8 +241,8 @@ This writes the `.zip`, `.zip.sha256`, and `.manifest.json` files under
 Compile and upload the Blink sketch:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\01.Basics\Blink -Clean
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 -SketchPath .\examples\01.Basics\Blink -ComPort COM3
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_compile.ps1 -SketchPath .\examples\01.Basics\Blink -Clean
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 -SketchPath .\examples\01.Basics\Blink -ComPort COM3
 ```
 
 Compile the serial API compatibility sketch:

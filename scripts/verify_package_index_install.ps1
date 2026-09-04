@@ -12,6 +12,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$scriptHostPath = (Get-Process -Id $PID).Path
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -41,7 +42,7 @@ function Invoke-CheckedPwshScript {
     )
 
     Write-Host "==> $Description"
-    & pwsh -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @Arguments
+    & $scriptHostPath -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "$Description failed with exit code $LASTEXITCODE"
     }

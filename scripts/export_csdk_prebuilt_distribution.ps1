@@ -312,7 +312,14 @@ function ConvertTo-DistributionValue {
         return $null
     }
     if ($Value -is [string]) {
-        if ([System.IO.Path]::IsPathRooted($Value)) {
+        $isRootedPath = $false
+        try {
+            $isRootedPath = [System.IO.Path]::IsPathRooted($Value)
+        }
+        catch [System.ArgumentException] {
+            # Manifest strings can be compiler defines containing quotes, not paths.
+        }
+        if ($isRootedPath) {
             try {
                 $relative = Get-DistributionRelativePath -Path $Value
                 return (Get-FullPath (Join-Path $DestinationRoot $relative))
@@ -353,7 +360,14 @@ function ConvertTo-ManifestRelativePath {
     if ([string]::IsNullOrWhiteSpace($Value)) {
         return $Value
     }
-    if ([System.IO.Path]::IsPathRooted($Value) -and $Value.StartsWith($BaseRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $isRootedPath = $false
+    try {
+        $isRootedPath = [System.IO.Path]::IsPathRooted($Value)
+    }
+    catch [System.ArgumentException] {
+        return $Value
+    }
+    if ($isRootedPath -and $Value.StartsWith($BaseRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         return Get-RelativePath -BaseRoot $BaseRoot -Path $Value
     }
     return $Value

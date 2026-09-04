@@ -10,6 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+. (Join-Path $PSScriptRoot "archive_helpers.ps1")
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -134,7 +135,7 @@ $archiveLeaf = Split-Path -Leaf $distributionRoot
 if ($ArchiveLayout -eq "Directory") {
     Push-Location $archiveParent
     try {
-        Compress-Archive -LiteralPath $archiveLeaf -DestinationPath $zipPath -CompressionLevel Optimal
+        New-ProjectZipArchive -SourceDirectory $archiveLeaf -DestinationPath $zipPath
     }
     finally {
         Pop-Location
@@ -154,7 +155,7 @@ else {
         Get-ChildItem -LiteralPath $distributionRoot -Force | ForEach-Object {
             Copy-Item -LiteralPath $_.FullName -Destination $stagingToolRoot -Recurse -Force
         }
-        Compress-Archive -LiteralPath $stagingToolRoot -DestinationPath $zipPath -CompressionLevel Optimal
+        New-ProjectZipArchive -SourceDirectory $stagingToolRoot -DestinationPath $zipPath
     }
     finally {
         if (Test-Path -LiteralPath $stagingRoot) {

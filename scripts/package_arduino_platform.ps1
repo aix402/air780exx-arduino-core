@@ -26,6 +26,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+. (Join-Path $PSScriptRoot "archive_helpers.ps1")
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -195,7 +196,7 @@ try {
         Copy-Item -LiteralPath (Join-Path $repoRoot "scripts\$scriptName") -Destination (Join-Path $stagingPlatformRoot "tools\$scriptName") -Force
     }
 
-    Compress-Archive -LiteralPath $stagingPlatformRoot -DestinationPath $zipPath -CompressionLevel Optimal
+    New-ProjectZipArchive -SourceDirectory $stagingPlatformRoot -DestinationPath $zipPath
 }
 finally {
     if (Test-Path -LiteralPath $stagingRoot) {

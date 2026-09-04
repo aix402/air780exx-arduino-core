@@ -24,6 +24,9 @@
 - 手工配置 linker script。
 - 手工下载 toolchain。
 
+维护者脚本支持 Windows PowerShell 5.1 和 PowerShell 7；以下命令使用系统自带的
+`powershell`。
+
 ## 发布资产形态
 
 推荐把发布资产拆成多个 Arduino tool/platform 包：
@@ -102,8 +105,8 @@ Arduino15\packages\air780\tools\luatos-cli\<version>
 发布前至少跑：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_csdk_prebuilt_arduino_flow.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean -KeepSmokeRoot
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_csdk_prebuilt_arduino_flow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1 -Clean -KeepSmokeRoot
 ```
 
 第一条验证：
@@ -130,7 +133,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_ins
 有硬件时再跑：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
   -SketchPath .\examples\01.Basics\Blink `
   -ComPort COM3 `
   -Clean
@@ -141,7 +144,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\arduino_cli_upload.ps1 `
 推荐用一个脚本生成干净目录，例如：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_release_candidate.ps1 `
   -Clean `
   -OutputDirectory .\dist\release-v0.2.0 `
   -BaseUrl https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0 `

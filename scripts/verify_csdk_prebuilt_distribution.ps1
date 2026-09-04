@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$scriptHostPath = (Get-Process -Id $PID).Path
 $distributionRoot = Join-Path $repoRoot "dist\csdk-prebuilt-air780epm"
 $distributionManifest = Join-Path $distributionRoot "arduino_export_manifest.json"
 
@@ -90,7 +91,7 @@ function Invoke-DistributionCompile {
         $env:AIR780EPM_GNU_RM_TOOL_ROOT = $ToolchainRoot
     }
     try {
-        & pwsh @compileArgs
+        & $scriptHostPath @compileArgs
         if ($LASTEXITCODE -ne 0) {
             throw "Arduino CLI compile failed for $BuildName with exit code $LASTEXITCODE"
         }
@@ -119,7 +120,7 @@ if ($Clean) {
     $prebuildArgs += "-Clean"
 }
 Write-Host "==> Build clean CSDK/runner prebuild"
-& pwsh @prebuildArgs
+& $scriptHostPath @prebuildArgs
 if ($LASTEXITCODE -ne 0) {
     throw "CSDK/runner prebuild failed with exit code $LASTEXITCODE"
 }
@@ -136,7 +137,7 @@ if ($Clean) {
 if ($NoToolchain) {
     $exportArgs += "-NoToolchain"
 }
-& pwsh @exportArgs
+& $scriptHostPath @exportArgs
 if ($LASTEXITCODE -ne 0) {
     throw "CSDK prebuilt distribution export failed with exit code $LASTEXITCODE"
 }

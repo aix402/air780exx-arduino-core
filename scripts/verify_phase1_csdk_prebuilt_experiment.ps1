@@ -10,6 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$scriptHostPath = (Get-Process -Id $PID).Path
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -45,7 +46,7 @@ if (-not $SkipSoftware) {
     }
 
     Write-Host "==> Software acceptance: Arduino CLI + CSDK prebuilt direct-link flow"
-    & pwsh @verifyArgs
+    & $scriptHostPath @verifyArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Software acceptance failed with exit code $LASTEXITCODE"
     }
@@ -63,7 +64,7 @@ if ($IncludeDistribution) {
     }
 
     Write-Host "==> Distribution acceptance: bundled CSDK prebuilt package"
-    & pwsh @distributionArgs
+    & $scriptHostPath @distributionArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Distribution acceptance failed with exit code $LASTEXITCODE"
     }
@@ -100,7 +101,7 @@ if (-not [string]::IsNullOrWhiteSpace($FlashComPort)) {
     Assert-File -Path $socFile -Description "$hardwareName soc"
 
     Write-Host "==> Hardware acceptance: flash $hardwareName on $FlashComPort"
-    & pwsh `
+    & $scriptHostPath `
         -NoProfile `
         -ExecutionPolicy Bypass `
         -File (Join-Path $PSScriptRoot "upload_core.ps1") `
@@ -112,7 +113,7 @@ if (-not [string]::IsNullOrWhiteSpace($FlashComPort)) {
     }
 
     Write-Host "==> Hardware acceptance: verify $hardwareName log on $FlashComPort"
-    & pwsh `
+    & $scriptHostPath `
         -NoProfile `
         -ExecutionPolicy Bypass `
         -File (Join-Path $PSScriptRoot "verify_log.ps1") `

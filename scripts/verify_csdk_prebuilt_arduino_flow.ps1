@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$scriptHostPath = (Get-Process -Id $PID).Path
 
 function Resolve-RepoPath {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -96,7 +97,7 @@ function Invoke-ArduinoCompile {
         $compileArgs += "-CliVerbose"
     }
 
-    & pwsh @compileArgs
+    & $scriptHostPath @compileArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Arduino CLI compile failed for $SketchName with exit code $LASTEXITCODE"
     }

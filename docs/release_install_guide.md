@@ -105,7 +105,7 @@ full flash.
 Before publishing a package index, run:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_package_index_install.ps1
 ```
 
 The gate regenerates the no-toolchain CSDK ABI archive, platform archive, GNU
