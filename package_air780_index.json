@@ -1,0 +1,88 @@
+{
+  "packages": [
+    {
+      "name": "air780",
+      "maintainer": "AIR780 Arduino Core Contributors",
+      "websiteURL": "https://github.com/aix402/air780exx-arduino-core",
+      "email": "",
+      "platforms": [
+        {
+          "name": "AIR780 Arduino Core",
+          "architecture": "air780",
+          "version": "0.2.0",
+          "category": "Contributed",
+          "help": {
+            "online": "https://github.com/aix402/air780exx-arduino-core"
+          },
+          "boards": [
+            {
+              "name": "AIR780EPM Dev Board"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "air780",
+              "name": "air780epm-csdk",
+              "version": "0.2.0"
+            },
+            {
+              "packager": "air780",
+              "name": "gnu-rm",
+              "version": "10.2.1-ec718"
+            },
+            {
+              "packager": "air780",
+              "name": "luatos-cli",
+              "version": "1.8.0"
+            }
+          ],
+          "url": "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/air780-arduino-platform-0.2.0.zip",
+          "archiveFileName": "air780-arduino-platform-0.2.0.zip",
+          "checksum": "SHA-256:2c4f0f2b536b80295908ba2213a417a7ea91f10ae445109d61d046e7fa98a10e",
+          "size": "110770"
+        }
+      ],
+      "tools": [
+        {
+          "name": "air780epm-csdk",
+          "version": "0.2.0",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/csdk-prebuilt-air780epm-0.2.0-notoolchain-toolroot.zip",
+              "archiveFileName": "csdk-prebuilt-air780epm-0.2.0-notoolchain-toolroot.zip",
+              "checksum": "SHA-256:e4162b07b36dfa4aeda97db65ef89bb549d2211d0aabb0c124cb6d43aef791e3",
+              "size": "41738400"
+            }
+          ]
+        },
+        {
+          "name": "gnu-rm",
+          "version": "10.2.1-ec718",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/gnu-rm-10.2.1-ec718.zip",
+              "archiveFileName": "gnu-rm-10.2.1-ec718.zip",
+              "checksum": "SHA-256:cd48d36db1bccb0622a3d24d81d0694dad8a03b3a8f23afcc97391103dbfc111",
+              "size": "203789793"
+            }
+          ]
+        },
+        {
+          "name": "luatos-cli",
+          "version": "1.8.0",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/aix402/air780exx-arduino-core/releases/download/v0.2.0/luatos-cli-1.8.0.zip",
+              "archiveFileName": "luatos-cli-1.8.0.zip",
+              "checksum": "SHA-256:9d0588eec7afae2f9339ef6074b7a265957fccf5c3007fb3fe171054bb5042c2",
+              "size": "7034934"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
