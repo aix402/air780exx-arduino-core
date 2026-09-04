@@ -230,21 +230,9 @@ https://raw.githubusercontent.com/aix402/air780exx-arduino-core/main/package_air
 
 ## 网络和代理
 
-GitHub release assets 在部分网络下可能出现：
-
-- `wsarecv`
-- `connection reset`
-- 下载很慢
-- 大文件中断
-
-推荐优先用 Arduino CLI 配置代理，而不是改系统 WinHTTP：
-
-```yaml
-network:
-  proxy: http://127.0.0.1:7897
-```
-
-也可以让用户使用稳定网络后重试。下载速度不稳定通常来自 GitHub/CDN、代理节点、运营商链路、文件大小和 Arduino CLI 重试行为共同影响。
+发布验收和用户安装都依赖能访问 GitHub package index 与 Release assets 的网络环境。
+若下载失败、下载很慢或大文件中断，应按各自网络环境配置代理或使用稳定网络后
+重试；本仓库不提供特定代理软件、地址或端口的配置建议。
 
 ## 上传和 boot recovery
 

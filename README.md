@@ -1,5 +1,12 @@
 # AIR780 Arduino Core
 
+[English](README.md) | [简体中文](README_zh-CN.md)
+
+> ## Community-Maintained, Not an Official OpenLuat Project
+>
+> This project is still experimental and has only received limited validation
+> on Windows and AIR780EPM. Evaluate compatibility, stability, and data risks.
+
 Arduino Core porting workspace for OpenLuat AIR780Ex modules.
 
 The first supported target is [AIR780EPM](https://docs.openluat.com/air780epm/product/),
@@ -64,6 +71,9 @@ license locations.
 
 - [AIR780EPM product page](https://docs.openluat.com/air780epm/product/)
 - [Arduino IDE install and upload guide](docs/release_install_guide.md)
+- Arduino Boards Manager package index:
+  `https://raw.githubusercontent.com/aix402/air780exx-arduino-core/main/package_air780_index.json`
+- [Luatools](https://docs.openluat.com/common/Luatools/) for optional manual flashing
 - [Boot/download mode recovery upload](docs/release_install_guide.md#boot-mode-recovery-upload)
 - [Maintainer notes](docs/maintainer_notes.md)
 - [Public release checklist](docs/public_release_checklist.md)
@@ -112,9 +122,18 @@ channel tokens, not GPIO numbers. The core does not currently promise
 
 ## Serial Ports
 
-`Serial` is the USB/log output channel and does not claim UART0. `Serial1`,
-`Serial2`, and `Serial3` are compile-enabled HardwareSerial objects backed by
-LuatOS UART IDs 1, 2, and 3. Their default pin routes follow `docs/pinmap.md`.
+When connected over USB in normal mode, the board enumerates three Windows COM
+ports. One is the command/log port used for normal Arduino IDE upload and
+Arduino `Serial` logs. `Serial` is this USB/log output channel and does not
+claim UART0. `Serial1`, `Serial2`, and `Serial3` are compile-enabled
+HardwareSerial objects backed by LuatOS UART IDs 1, 2, and 3. Their default pin
+routes follow `docs/pinmap.md`. Arduino IDE upload recipes use
+[luatos-cli](https://github.com/wendal/luatos-cli) by default; it resets the
+board and detects the download port. Its EC718 automatic Boot-mode and
+multi-port detection and USB interface mapping are documented in the
+[EC718 flash protocol](https://github.com/wendal/luatos-cli/blob/main/docs/ec718-flash-protocol.md).
+See the [USB upload and log guide](docs/release_install_guide.md#upload) for
+port selection and Boot-mode recovery.
 `Serial1` TX/RX has been hardware-observed on GPIO18/GPIO19; `Serial2` and
 `Serial3` are still pending hardware validation.
 
@@ -180,9 +199,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\view_log.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_log.ps1 -RequirePass
 ```
 
-For a board that no longer exposes its normal serial port, enter Boot/download
-mode by holding `BOOT`, pressing `RESET` (or power-cycling), then releasing
-`BOOT` and waiting for the EC718 download port to appear. See the
+After the normal command/log port is selected, the upload tool normally resets
+the board and detects the required download port automatically. If automatic
+detection cannot recover a board that no longer exposes its normal command/log
+port, enter Boot/download mode by holding `BOOT`, pressing `RESET` (or
+power-cycling), then releasing `BOOT` and waiting for the EC718 download port
+to appear. [Luatools](https://docs.openluat.com/common/Luatools/) is also
+available for manual flashing. See the
 [recovery upload guide](docs/release_install_guide.md#boot-mode-recovery-upload)
 for the Arduino IDE and command-line flow.
 

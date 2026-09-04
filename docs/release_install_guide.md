@@ -37,19 +37,11 @@ Current public package index:
 https://raw.githubusercontent.com/aix402/air780exx-arduino-core/main/package_air780_index.json
 ```
 
-## Proxy Notes
+## Network Requirements
 
-If Arduino CLI/IDE can open Arduino's built-in indexes but fails to fetch the
-AIR780 package index or GitHub release assets with `wsarecv` / connection-reset
-errors, route Arduino CLI through the local proxy in the CLI config:
-
-```yaml
-network:
-  proxy: http://127.0.0.1:7897
-```
-
-This avoids changing the system WinHTTP proxy and does not require administrator
-permissions. Adjust the port to match the local proxy service.
+Arduino IDE must be able to download the AIR780 package index and its GitHub
+Release assets. If downloading fails or is slow, resolve the network or proxy
+configuration according to the local environment, then retry the installation.
 
 ## Compile
 
@@ -67,15 +59,18 @@ toolchain, and `luatos-cli`. Users should not need xmake, LuatOS source, or
 
 ## Upload
 
-Connect the board by USB. Windows enumerates the running board as a USB virtual
-serial port (a COM port). This normal-mode COM port carries Arduino `Serial`
-logs and is also selected for normal Arduino IDE uploads. It does not require
-an external USB-to-TTL adapter.
+Connect the board by USB. Windows enumerates the running board as three USB
+virtual serial ports (COM ports). One normal-mode command/log COM port carries
+Arduino `Serial` logs and is also selected for normal Arduino IDE uploads. It
+does not require an external USB-to-TTL adapter.
+
+The detailed EC718 USB interface mapping, COM-port enumeration, and automatic
+Boot/download detection flow are documented in the
+[luatos-cli EC718 flash protocol](https://github.com/wendal/luatos-cli/blob/main/docs/ec718-flash-protocol.md).
 
 For a normally running board, select this COM port in Arduino IDE and click
 Upload. `COM3` is only an observed example; use the COM number currently
-assigned by Windows, including `COM10` and higher. Use the normal `COM10`
-form, not the legacy `\\.\COM10` device-path form.
+assigned by Windows.
 
 The upload recipe calls:
 
@@ -85,10 +80,13 @@ luatos-cli flash run --soc <firmware.soc> --port <selected-port>
 
 ## Boot Mode Recovery Upload
 
-If the firmware is not running and the normal command/log port is unavailable,
-enter EC718 Boot/download mode manually. Windows then enumerates a separate
-EC718 download COM port; its COM number is different from the normal-mode
-port.
+After the normal command/log port is selected in Arduino IDE, `luatos-cli`
+normally resets the board and detects the required download port automatically.
+Users do not normally need to enter Boot/download mode. If automatic detection
+cannot recover a board whose firmware is not running and whose normal command/
+log port is unavailable, enter EC718 Boot/download mode manually. Windows then
+enumerates a separate EC718 download COM port; its COM number is different from
+the normal-mode port.
 
 1. Hold BOOT.
 2. Press RESET or power-cycle the board.
@@ -96,8 +94,7 @@ port.
 4. Wait for Windows to enumerate the EC718 download port.
 
 For command-line recovery, use `auto` as the upload port. This avoids needing
-to enter the Boot/download COM number manually, including when it is `COM10`
-or higher:
+to enter the Boot/download COM number manually:
 
 ```powershell
 arduino-cli compile `
@@ -112,13 +109,15 @@ This maps to `luatos-cli flash run --port auto`. In the verified release smoke,
 full flash. `COM3` for normal mode and `COM7` for download mode are examples
 only; Windows assigns the actual values.
 
+[Luatools](https://docs.openluat.com/common/Luatools/) is also available when
+manual flashing is preferred.
+
 ## Logs
 
 Arduino `Serial` logs use the normal-mode USB virtual serial port. For the
 command-line log tool, `luatos-cli log view-binary --port auto --probe` is the
 recommended form because it auto-detects the EC718 log port. When selecting a
-port manually, use the COM number currently assigned by Windows, including
-`COM10` and higher.
+port manually, use the COM number currently assigned by Windows.
 
 ## Release Gate
 
@@ -168,15 +167,13 @@ download mode, flashed through the detected `COM7` download port with
 
 The earlier `v0.1.0` public GitHub release passed:
 
-- online package-index install from the GitHub Release URL using
-  `network.proxy`;
+- online package-index install from the GitHub Release URL;
 - installed-package `AIR780 > 01.Basics > Blink` compile.
 
 The earlier `v0.1.0-rc5` public GitHub release candidate passed:
 
-- local package-index install smoke from a generated `127.0.0.1` index;
-- online package-index install from the GitHub Release URL using
-  `network.proxy`;
+- local package-index install smoke from a temporary local index;
+- online package-index install from the GitHub Release URL;
 - installed-package `AIR780 > 01.Basics > Blink` compile;
 - Arduino IDE download and install;
 - Arduino IDE `AIR780 > 01.Basics > Blink` compile;
